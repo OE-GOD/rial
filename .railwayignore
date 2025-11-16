@@ -1,0 +1,8 @@
+node_modules/
+*.log
+.env
+uploads/
+logs/
+test-*.js
+zk-img-halo2/target/
+
