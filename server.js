@@ -1355,11 +1355,18 @@ app.use(errorHandler);
 // Initialize database and start server
 async function startServer() {
     try {
-        // Initialize database connections
-        if (process.env.USE_DATABASE !== 'false') {
+        // Initialize database connections (optional - continues without DB if fails)
+        if (process.env.USE_DATABASE !== 'false' && process.env.DATABASE_URL) {
             console.log('🔌 Initializing database connections...');
-            await initDatabase();
-            console.log('✅ Database initialized successfully');
+            try {
+                await initDatabase();
+                console.log('✅ Database initialized successfully');
+            } catch (dbError) {
+                console.warn('⚠️  Database connection failed, continuing without database');
+                console.warn('   Insurance API will work in memory-only mode');
+            }
+        } else {
+            console.log('📝 Running in memory-only mode (no database configured)');
         }
 
         // Start the server
