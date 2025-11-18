@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Verification - Rial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #f5f5f7;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 { margin: 0 0 10px 0; color: #1d1d1f; }
+        h3 { margin-top: 0; }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .secure {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .step {
+            background: #007AFF;
+            color: white;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #d1d1d6;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        button:hover { background: #0051D5; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result { padding: 20px; border-radius: 8px; margin-top: 20px; }
+        .success { background: #e8f5e9; border-left: 4px solid #4caf50; }
+        .error { background: #ffebee; border-left: 4px solid #f44336; }
+        .code { 
+            background: #f5f5f5; 
+            padding: 12px; 
+            border-radius: 6px; 
+            font-family: monospace; 
+            font-size: 12px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        .comparison {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .comparison > div {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .insecure { background: #ffebee; }
+        .secure-method { background: #e8f5e9; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔐 Secure Image Verification</h1>
+        <p style="color: #86868b;">Cryptographically prove you own the certified image</p>
+    </div>
+
+    <div class="card comparison">
+        <div class="insecure">
+            <h4 style="color: #f44336; margin-top: 0;">❌ Insecure (Current)</h4>
+            <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                <li>Anyone can download image</li>
+                <li>Anyone can claim ownership</li>
+                <li>No proof of who took it</li>
+                <li>Vulnerable to fraud</li>
+            </ul>
+        </div>
+        <div class="secure-method">
+            <h4 style="color: #4caf50; margin-top: 0;">✅ Secure (New)</h4>
+            <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                <li>Requires private key</li>
+                <li>Cryptographic proof</li>
+                <li>Challenge-response</li>
+                <li>Prevents replay attacks</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>How Secure Verification Works</h3>
+        <ol style="font-size: 14px; line-height: 1.6;">
+            <li><strong>Request Challenge:</strong> Get a fresh random challenge from server</li>
+            <li><strong>Sign Challenge:</strong> Use your private key (in Secure Enclave) to sign it</li>
+            <li><strong>Submit Proof:</strong> Send image + signature + public key</li>
+            <li><strong>Server Verifies:</strong>
+                <ul>
+                    <li>Image matches merkle root ✓</li>
+                    <li>Public key matches original attestation ✓</li>
+                    <li>Signature proves you own private key ✓</li>
+                    <li>Challenge prevents replay attacks ✓</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h3>Test Secure Verification</h3>
+        
+        <div style="margin: 20px 0;">
+            <h4><span class="step">1</span>Get Challenge</h4>
+            <button onclick="getChallenge()">Request Challenge</button>
+            <div id="challenge" class="code" style="display: none;"></div>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <h4><span class="step">2</span>Sign Challenge (In iOS App)</h4>
+            <p style="font-size: 14px; color: #666;">
+                The iOS app must sign the challenge with the private key in Secure Enclave
+            </p>
+            <textarea id="signature" placeholder="Paste signature from iOS app..." rows="3"></textarea>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <h4><span class="step">3</span>Upload Image & Verify</h4>
+            <input type="file" id="image" accept="image/*">
+            <input type="text" id="merkleRoot" placeholder="Merkle Root">
+            <input type="text" id="publicKey" placeholder="Public Key (base64)">
+            <br>
+            <button onclick="secureVerify()" id="verifyBtn">🔐 Secure Verify</button>
+        </div>
+
+        <div id="result" style="display: none;"></div>
+    </div>
+
+    <div class="card warning">
+        <h4 style="margin-top: 0;">⚠️ Implementation Note</h4>
+        <p style="margin: 0; font-size: 14px;">
+            This demonstrates the secure verification flow. The iOS app needs to be updated to:
+            <br>• Sign challenges with Secure Enclave
+            <br>• Include public key with verification
+            <br>• Handle the challenge-response flow
+        </p>
+    </div>
+
+    <script>
+        let currentChallenge = null;
+
+        async function getChallenge() {
+            try {
+                const res = await fetch('/verify/challenge');
+                const data = await res.json();
+                
+                currentChallenge = data.challenge;
+                document.getElementById('challenge').innerHTML = `
+                    <strong>Challenge:</strong><br>${data.challenge}<br>
+                    <strong>Expires in:</strong> ${data.expiresIn} seconds
+                `;
+                document.getElementById('challenge').style.display = 'block';
+                
+            } catch (e) {
+                alert('Failed to get challenge: ' + e.message);
+            }
+        }
+
+        async function secureVerify() {
+            const image = document.getElementById('image').files[0];
+            const merkleRoot = document.getElementById('merkleRoot').value;
+            const publicKey = document.getElementById('publicKey').value;
+            const signature = document.getElementById('signature').value;
+            const resultDiv = document.getElementById('result');
+
+            if (!image || !merkleRoot || !publicKey || !signature || !currentChallenge) {
+                alert('Please complete all steps');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', image);
+            formData.append('merkleRoot', merkleRoot);
+            formData.append('publicKey', publicKey);
+            formData.append('challenge', currentChallenge);
+            formData.append('challengeSignature', signature);
+
+            try {
+                const res = await fetch('/secure-verify', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+                
+                if (data.verified && data.secure) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3 style="color: #4caf50; margin-top: 0;">🔐 Securely Verified!</h3>
+                        <p><strong>${data.message}</strong></p>
+                        <div style="font-size: 14px;">
+                            ✅ Image integrity verified<br>
+                            ✅ Ownership cryptographically proven<br>
+                            ✅ Challenge-response validated<br>
+                            ✅ Replay attack prevented
+                        </div>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3 style="color: #f44336; margin-top: 0;">❌ Verification Failed</h3>
+                        <p><strong>Step:</strong> ${data.step || 'Unknown'}</p>
+                        <p><strong>Error:</strong> ${data.error}</p>
+                        <pre style="font-size: 12px;">${JSON.stringify(data.details, null, 2)}</pre>
+                    `;
+                }
+                
+                resultDiv.style.display = 'block';
+
+            } catch (e) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h3>Error</h3><p>${e.message}</p>`;
+                resultDiv.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
+
+

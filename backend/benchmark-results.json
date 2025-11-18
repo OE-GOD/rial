@@ -1,0 +1,189 @@
+{
+  "system": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpuCount": 8,
+    "totalMemory": 8589934592,
+    "freeMemory": 93421568,
+    "nodeVersion": "v22.9.0",
+    "timestamp": "2025-11-09T05:45:14.786Z"
+  },
+  "benchmarks": {
+    "zkProofGeneration": {
+      "snarkjs": {
+        "small": {
+          "time": 0,
+          "error": "Missing required parameter \"hOrig\" for circuit \"crop\"",
+          "success": false
+        },
+        "medium": {
+          "time": 0,
+          "error": "Missing required parameter \"hOrig\" for circuit \"crop\"",
+          "success": false
+        },
+        "large": {
+          "time": 0,
+          "error": "Missing required parameter \"hOrig\" for circuit \"crop\"",
+          "success": false
+        }
+      },
+      "halo2": {
+        "small": {
+          "time": 223.60637500009034,
+          "proofSize": 512,
+          "success": true
+        },
+        "medium": {
+          "time": 108.20462500001304,
+          "proofSize": 512,
+          "success": true
+        },
+        "large": {
+          "time": 171.641500000027,
+          "proofSize": 512,
+          "success": true
+        }
+      }
+    },
+    "imageProcessing": {
+      "small": {
+        "error": "Cannot read properties of undefined (reading 'length')",
+        "success": false
+      },
+      "medium": {
+        "error": "Cannot read properties of undefined (reading 'length')",
+        "success": false
+      },
+      "large": {
+        "error": "Cannot read properties of undefined (reading 'length')",
+        "success": false
+      }
+    },
+    "databaseOperations": {
+      "insert": {
+        "times": [],
+        "success": true
+      },
+      "query": {
+        "times": [],
+        "success": true
+      },
+      "cache": {
+        "times": [],
+        "success": true
+      },
+      "error": "Cannot read properties of null (reading 'query')",
+      "success": false
+    },
+    "memoryUsage": {
+      "small": {
+        "before": {
+          "rss": 66879488,
+          "heapTotal": 29818880,
+          "heapUsed": 27879624,
+          "external": 3156709,
+          "arrayBuffers": 204810
+        },
+        "after": {
+          "rss": 66355200,
+          "heapTotal": 30867456,
+          "heapUsed": 27149976,
+          "external": 3109703,
+          "arrayBuffers": 157804
+        },
+        "delta": {
+          "rss": -524288,
+          "heapUsed": -729648,
+          "external": -47006
+        },
+        "success": true
+      },
+      "medium": {
+        "before": {
+          "rss": 66387968,
+          "heapTotal": 30867456,
+          "heapUsed": 27150680,
+          "external": 3109703,
+          "arrayBuffers": 157804
+        },
+        "after": {
+          "rss": 66437120,
+          "heapTotal": 30867456,
+          "heapUsed": 27193984,
+          "external": 3119418,
+          "arrayBuffers": 167519
+        },
+        "delta": {
+          "rss": 49152,
+          "heapUsed": 43304,
+          "external": 9715
+        },
+        "success": true
+      },
+      "large": {
+        "before": {
+          "rss": 66437120,
+          "heapTotal": 30867456,
+          "heapUsed": 27194688,
+          "external": 3119418,
+          "arrayBuffers": 167519
+        },
+        "after": {
+          "rss": 62586880,
+          "heapTotal": 30867456,
+          "heapUsed": 27289552,
+          "external": 3153709,
+          "arrayBuffers": 201810
+        },
+        "delta": {
+          "rss": -3850240,
+          "heapUsed": 94864,
+          "external": 34291
+        },
+        "success": true
+      },
+      "initial": {
+        "rss": 66879488,
+        "heapTotal": 29818880,
+        "heapUsed": 27878904,
+        "external": 3156709,
+        "arrayBuffers": 204810
+      }
+    },
+    "concurrentRequests": {
+      "concurrencyLevels": [
+        1,
+        5,
+        10,
+        20
+      ],
+      "results": {
+        "1": {
+          "totalTime": 252.48237500002142,
+          "averageTime": 252.48237500002142,
+          "throughput": 3.9606725023872067,
+          "success": true
+        },
+        "5": {
+          "totalTime": 301.41399999998976,
+          "averageTime": 60.28279999999795,
+          "throughput": 16.588479632665273,
+          "success": true
+        },
+        "10": {
+          "totalTime": 297.57720800000243,
+          "averageTime": 29.757720800000243,
+          "throughput": 33.604724189763616,
+          "success": true
+        },
+        "20": {
+          "totalTime": 290.294709000038,
+          "averageTime": 14.514735450001899,
+          "throughput": 68.89550301792578,
+          "success": true
+        }
+      }
+    }
+  },
+  "summary": {}
+}

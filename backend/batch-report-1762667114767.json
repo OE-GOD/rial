@@ -1,0 +1,35 @@
+{
+  "total": 5,
+  "successful": 0,
+  "failed": 5,
+  "skipped": 0,
+  "startTime": 1762667108719,
+  "endTime": 1762667114767,
+  "items": [
+    {
+      "id": "demo-0",
+      "error": "Failed after 2 attempts: Input buffer contains unsupported image format",
+      "status": "failed"
+    },
+    {
+      "id": "demo-1",
+      "error": "Failed after 2 attempts: Input buffer contains unsupported image format",
+      "status": "failed"
+    },
+    {
+      "id": "demo-2",
+      "error": "Failed after 2 attempts: Input buffer contains unsupported image format",
+      "status": "failed"
+    },
+    {
+      "id": "demo-3",
+      "error": "Failed after 2 attempts: Input buffer contains unsupported image format",
+      "status": "failed"
+    },
+    {
+      "id": "demo-4",
+      "error": "Failed after 2 attempts: Input buffer contains unsupported image format",
+      "status": "failed"
+    }
+  ]
+}
