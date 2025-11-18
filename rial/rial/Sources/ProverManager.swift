@@ -79,22 +79,21 @@ class ProverManager {
     
     static let shared = ProverManager()
     
-    // TODO: Move to configuration file or environment variable
+    // Backend URL configuration - FORCE localhost for simulator
     private var baseURL: String {
-        // Check if user has set a custom URL in settings
-        if let customURL = UserDefaults.standard.string(forKey: "backendURL"), !customURL.isEmpty {
-            print("🔧 Using custom backend URL: \(customURL)")
-            return customURL
-        }
-
-        // Default URLs
         #if targetEnvironment(simulator)
-        let defaultURL = "http://localhost:3000"
-        print("🔧 Using simulator default: \(defaultURL)")
+        // ALWAYS use 127.0.0.1 for simulator (more reliable than localhost)
+        let defaultURL = "http://127.0.0.1:3000"
+        print("🔧 SIMULATOR: Using 127.0.0.1:3000")
         return defaultURL
         #else
-        let defaultURL = "http://10.0.0.59:3000"
-        print("🔧 Using device default: \(defaultURL)")
+        // Physical device - check settings or use default
+        if let customURL = UserDefaults.standard.string(forKey: "backendURL"), !customURL.isEmpty {
+            print("🔧 DEVICE: Using custom backend URL: \(customURL)")
+            return customURL
+        }
+        let defaultURL = "http://192.168.1.100:3000"
+        print("🔧 DEVICE: Using default: \(defaultURL)")
         return defaultURL
         #endif
     }

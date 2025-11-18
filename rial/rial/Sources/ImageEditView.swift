@@ -289,6 +289,9 @@ struct ImageEditView: View {
             return
         }
         
+        // Start performance timing
+        let timer = PerformanceMonitor.shared.startTiming("Photo Certification")
+        
         isLoading = true
         showSettingsOption = false
         
@@ -355,6 +358,8 @@ struct ImageEditView: View {
                 
                 switch result {
                 case .success(let response):
+                    timer.stop()
+                    
                     alertTitle = "Success! ✅"
                     alertMessage = response.message
                     if let signatureValid = response.signatureValid {
@@ -387,6 +392,46 @@ struct ImageEditView: View {
                     showAlert = true
                     
                 case .failure(let error):
+                    // Report error
+                    ErrorReporter.shared.report(error: error, context: "Photo Certification", severity: .warning)
+                    
+                    // Try offline certification as fallback
+                    print("⚠️ Backend failed, trying offline certification...")
+                    
+                    let cropInfo = CropInfo(
+                        x: Int(cropX),
+                        y: Int(cropY),
+                        width: Int(actualCropWidth),
+                        height: Int(actualCropHeight),
+                        originalWidth: Int(imageSize.width),
+                        originalHeight: Int(imageSize.height)
+                    )
+                    
+                    let offlineResult = OfflineCertificationManager.shared.certifyOffline(
+                        attestedImage: attestedImage,
+                        cropInfo: cropInfo
+                    )
+                    
+                    if offlineResult.success {
+                        alertTitle = "✅ Certified Offline"
+                        alertMessage = offlineResult.summary
+                        showConfetti = true
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        
+                        // Save with offline certification
+                        self.saveCertifiedImage(response: ProverResponse(
+                            message: "Offline certification successful",
+                            signatureValid: true,
+                            imageUrl: nil,
+                            zkProofs: nil,
+                            success: true
+                        ))
+                        
+                        showAlert = true
+                        return
+                    }
+                    
+                    // If offline also fails, show error
                     showRetryOption = false
                     showSettingsOption = false
                     alertTitle = "Certification Failed"

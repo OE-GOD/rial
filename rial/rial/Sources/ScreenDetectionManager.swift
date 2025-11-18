@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import CoreImage
+import Combine
 
 /// Manages screen detection to prevent photographing displays
 class ScreenDetectionManager: ObservableObject {
@@ -141,7 +142,7 @@ class ScreenDetectionManager: ObservableObject {
     
     private func detectScreen(imageData: Data, metadata: [String: Any]) async throws -> ScreenDetectionResult {
         // Use the backend AI agent
-        let baseURL = UserDefaults.standard.string(forKey: "backendURL") ?? ProverManager.defaultBackendURL
+        let baseURL = UserDefaults.standard.string(forKey: "backendURL") ?? ProverManager.shared.getBackendURL()
         let url = URL(string: "\(baseURL)/ai/detect-screen")!
         
         var request = URLRequest(url: url)

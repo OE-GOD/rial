@@ -11,7 +11,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		F0F5E64F2E9DAD0B009495C0 /* Exceptions for "rial" folder in "rial" target */ = {
+		F0E6DDF12ECC20420028D4AA /* Exceptions for "rial" folder in "rial" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Sources/Info.plist,
@@ -24,7 +24,7 @@
 		F0F5E61D2E9D6F5C009495C0 /* rial */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				F0F5E64F2E9DAD0B009495C0 /* Exceptions for "rial" folder in "rial" target */,
+				F0E6DDF12ECC20420028D4AA /* Exceptions for "rial" folder in "rial" target */,
 			);
 			path = rial;
 			sourceTree = "<group>";
