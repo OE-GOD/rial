@@ -165,6 +165,15 @@ app.post('/api/verify-photo', upload.single('image'), async (req, res) => {
     }
 });
 
+// Zero-Knowledge Auth API
+try {
+    const zkAuthAPI = require('./routes/zkAuth');
+    app.use('/api/zk-auth', zkAuthAPI);
+    console.log('✅ Zero-Knowledge Auth API loaded');
+} catch (error) {
+    console.log('⚠️ ZK Auth not available:', error.message);
+}
+
 // Start server
 app.listen(port, '0.0.0.0', () => {
     console.log('');
