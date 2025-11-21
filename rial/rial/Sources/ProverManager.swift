@@ -79,23 +79,21 @@ class ProverManager {
     
     static let shared = ProverManager()
     
-    // Backend URL configuration - FORCE localhost for simulator
+    // Backend URL configuration - FORCE PUBLIC URL WITH DATABASE
     private var baseURL: String {
-        #if targetEnvironment(simulator)
-        // ALWAYS use 127.0.0.1 for simulator (more reliable than localhost)
-        let defaultURL = "http://127.0.0.1:3000"
-        print("🔧 SIMULATOR: Using 127.0.0.1:3000")
-        return defaultURL
-        #else
-        // Physical device - check settings or use default
+        // FORCE use of public URL with database (ignore settings for now)
+        let publicURL = "https://merchants-technique-prove-joining.trycloudflare.com"
+        print("🔧 USING PUBLIC URL WITH DATABASE: \(publicURL)")
+        return publicURL
+        
+        // Uncomment below to re-enable settings:
+        /*
         if let customURL = UserDefaults.standard.string(forKey: "backendURL"), !customURL.isEmpty {
-            print("🔧 DEVICE: Using custom backend URL: \(customURL)")
+            print("🔧 Using custom backend URL: \(customURL)")
             return customURL
         }
-        let defaultURL = "http://192.168.1.100:3000"
-        print("🔧 DEVICE: Using default: \(defaultURL)")
-        return defaultURL
-        #endif
+        return publicURL
+        */
     }
     
     private var proveURL: URL? {

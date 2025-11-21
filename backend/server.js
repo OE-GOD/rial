@@ -1093,6 +1093,18 @@ try {
     logger.warn('AI Screen Detection not available:', error.message);
 }
 
+// Photo Verification API
+try {
+    const verificationAPI = require('./routes/verification');
+    app.use('/api', verificationAPI);
+    logger.info('✅ Photo Verification API loaded');
+    logger.info('   - Verify photo: POST /api/verify-photo');
+    logger.info('   - Get verification: GET /api/verify-photo/:id');
+    logger.info('   - Bulk verify: POST /api/bulk-verify');
+} catch (error) {
+    logger.warn('Photo Verification API not available:', error.message);
+}
+
 // Health check endpoint
 app.get('/health', healthCheck);
 

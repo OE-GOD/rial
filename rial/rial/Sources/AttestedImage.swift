@@ -6,10 +6,16 @@ struct AttestedImage {
     var image: UIImage
     var c2paClaim: C2PAClaim?
     var proofMetadata: ProofMetadata?  // Anti-AI proof data
+    
+    // Store exact binary data used for signing to prevent hash mismatch
+    var rawImageData: Data?
 
     var imageData: Data? {
-        // Use high quality compression (0.9) to preserve image clarity
-        // Values: 0.0 (max compression) to 1.0 (no compression)
+        // Return frozen data if available (CRITICAL for verification)
+        if let data = rawImageData {
+            return data
+        }
+        // Fallback: Use high quality compression (0.9)
         return image.jpegData(compressionQuality: 0.9)
     }
 

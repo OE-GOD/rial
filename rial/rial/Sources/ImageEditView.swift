@@ -427,6 +427,9 @@ struct ImageEditView: View {
                             success: true
                         ))
                         
+                        // Try to submit to backend for verification and storage
+                        self.submitToBackendForVerification(attestedImage: attestedImage, cropInfo: cropInfo)
+                        
                         showAlert = true
                         return
                     }
@@ -554,6 +557,33 @@ Please open Settings ▸ Privacy & Security ▸ Local Network, enable access for
         }.resume()
     }
 
+    /// Submit to backend for verification and database storage
+    private func submitToBackendForVerification(attestedImage: AttestedImage, cropInfo: CropInfo) {
+        print("📤 Submitting to backend for verification...")
+        
+        PhotoSubmissionManager.shared.submitForVerification(
+            attestedImage: attestedImage,
+            cropInfo: cropInfo
+        ) { result in
+            switch result {
+            case .success(let response):
+                print("✅ Backend verification complete!")
+                print("   Verified: \(response.verified)")
+                print("   Confidence: \(Int(response.confidence * 100))%")
+                print("   Photo ID: \(response.photoId ?? "N/A")")
+                print("   Recommendation: \(response.recommendation)")
+                
+                if !response.fraudIndicators.isEmpty {
+                    print("⚠️ Fraud indicators: \(response.fraudIndicators.joined(separator: ", "))")
+                }
+                
+            case .failure(let error):
+                print("⚠️ Backend verification failed: \(error.localizedDescription)")
+                print("   (Photo is still certified locally)")
+            }
+        }
+    }
+    
     private func calculateImageRect(imageSize: CGSize, containerSize: CGSize) -> CGRect {
         let imageAspect = imageSize.width / imageSize.height
         let containerAspect = containerSize.width / containerSize.height

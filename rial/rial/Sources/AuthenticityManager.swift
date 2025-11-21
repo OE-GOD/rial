@@ -50,8 +50,28 @@ class AuthenticityManager: ObservableObject {
         // Perform attestation on background thread
         DispatchQueue.global(qos: .userInitiated).async {
             do {
-                // 1. Generate Merkle tree from image tiles
-                let tiles = image.image.getTiles(tileSize: CGSize(width: 32, height: 32))
+                // 1. Freeze image data FIRST to ensure consistency
+                // This binary data will be:
+                // a) Used to generate the Merkle tree
+                // b) Signed by Secure Enclave
+                // c) Uploaded to the server
+                guard let frozenImageData = image.image.jpegData(compressionQuality: 0.9) else {
+                    DispatchQueue.main.async {
+                        completion(.failure(AttestationError.imageProcessingFailed))
+                    }
+                    return
+                }
+                
+                // Create a temporary UIImage from the frozen data to ensure tiles match the binary exactly
+                guard let frozenImageObj = UIImage(data: frozenImageData) else {
+                    DispatchQueue.main.async {
+                        completion(.failure(AttestationError.imageProcessingFailed))
+                    }
+                    return
+                }
+                
+                // 2. Generate Merkle tree from the FROZEN image tiles
+                let tiles = frozenImageObj.getTiles(tileSize: CGSize(width: 32, height: 32))
                 
                 guard !tiles.isEmpty else {
                     DispatchQueue.main.async {
@@ -68,7 +88,7 @@ class AuthenticityManager: ObservableObject {
                 
                 print("🌳 Merkle root: \(merkleRootHex)")
                 
-                // 2. Sign the Merkle root with Secure Enclave
+                // 3. Sign the Merkle root with Secure Enclave
                 guard let signature = self.secureEnclaveManager.sign(data: merkleRoot) else {
                     DispatchQueue.main.async {
                         completion(.failure(AttestationError.signingFailed))
@@ -79,7 +99,7 @@ class AuthenticityManager: ObservableObject {
                 let signatureBase64 = signature.base64EncodedString()
                 print("✍️ Image signed: \(signatureBase64.prefix(40))...")
                 
-                // 3. Get public key
+                // 4. Get public key
                 guard let publicKeyData = try? self.secureEnclaveManager.exportPubKey() else {
                     DispatchQueue.main.async {
                         completion(.failure(AttestationError.keyGenerationFailed))
@@ -90,7 +110,7 @@ class AuthenticityManager: ObservableObject {
                 let publicKeyBase64 = publicKeyData.base64EncodedString()
                 print("🔑 Public key: \(publicKeyBase64.prefix(40))...")
                 
-                // 4. Create C2PA claim
+                // 5. Create C2PA claim
                 let timestamp = ISO8601DateFormatter().string(from: Date())
                 let c2paClaim = C2PAClaim(
                     imageRoot: merkleRootHex,
@@ -99,14 +119,17 @@ class AuthenticityManager: ObservableObject {
                     timestamp: timestamp
                 )
                 
-                // 5. Create attested image with claim
+                // 6. Create attested image with claim AND frozen data
                 var attestedImage = image
+                attestedImage.image = frozenImageObj // Use the re-hydrated image visual
+                attestedImage.rawImageData = frozenImageData // Store the exact bytes!
                 attestedImage.c2paClaim = c2paClaim
                 
                 print("✅ Image attestation complete!")
                 print("   - Merkle root: \(merkleRootHex.prefix(40))...")
                 print("   - Timestamp: \(timestamp)")
                 print("   - Tiles: \(tiles.count)")
+                print("   - Frozen Size: \(frozenImageData.count) bytes")
                 
                 DispatchQueue.main.async {
                     completion(.success(attestedImage))
