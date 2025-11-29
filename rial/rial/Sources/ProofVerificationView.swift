@@ -10,7 +10,10 @@ import SwiftUI
 struct ProofVerificationView: View {
     let attestedImage: AttestedImage
     @State private var verificationResult: VerificationResult?
+    @State private var deepVerificationResult: DeepVerificationResult?
     @State private var isVerifying = false
+    @State private var isDeepVerifying = false
+    @State private var showDeepVerification = false
     
     var body: some View {
         ScrollView {
@@ -36,6 +39,14 @@ struct ProofVerificationView: View {
                     }
                     .buttonStyle(.borderedProminent)
                 }
+                
+                // Deep Verification Section
+                DeepVerificationSection(
+                    attestedImage: attestedImage,
+                    result: $deepVerificationResult,
+                    isVerifying: $isDeepVerifying,
+                    showDetails: $showDeepVerification
+                )
                 
                 // Proof details
                 ProofDetailsSection(attestedImage: attestedImage)
@@ -226,6 +237,121 @@ struct ProofDetailRow: View {
             Text(value)
                 .font(.subheadline)
                 .textSelection(.enabled)
+        }
+    }
+}
+
+// MARK: - Deep Cryptographic Verification Section
+
+struct DeepVerificationSection: View {
+    let attestedImage: AttestedImage
+    @Binding var result: DeepVerificationResult?
+    @Binding var isVerifying: Bool
+    @Binding var showDetails: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("🔐 Deep Cryptographic Verification")
+                    .font(.headline)
+                Spacer()
+                if result != nil {
+                    Button(showDetails ? "Hide" : "Details") {
+                        withAnimation { showDetails.toggle() }
+                    }
+                    .font(.caption)
+                }
+            }
+            
+            Text("Mathematically proves your ZK proof is real")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            if let result = result {
+                // Result summary
+                HStack(spacing: 16) {
+                    Image(systemName: result.isValid ? "checkmark.seal.fill" : "xmark.seal.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(result.isValid ? .green : .red)
+                    
+                    VStack(alignment: .leading) {
+                        Text(result.isValid ? "PROOF IS REAL!" : "Verification Failed")
+                            .font(.headline)
+                            .foregroundColor(result.isValid ? .green : .red)
+                        
+                        Text("Confidence: \(result.confidencePercentage)%")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                }
+                
+                if showDetails {
+                    Divider()
+                    
+                    // Individual checks
+                    ForEach(result.checks, id: \.name) { check in
+                        HStack {
+                            Image(systemName: check.passed ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundColor(check.passed ? .green : .red)
+                            
+                            VStack(alignment: .leading) {
+                                Text(check.name)
+                                    .font(.subheadline)
+                                if !check.passed {
+                                    Text(check.reason)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            Spacer()
+                        }
+                    }
+                }
+            } else if isVerifying {
+                HStack {
+                    ProgressView()
+                    Text("Running cryptographic checks...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            } else {
+                Button(action: runDeepVerification) {
+                    HStack {
+                        Image(systemName: "lock.shield")
+                        Text("Run Deep Verification")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.blue)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(result?.isValid == true ? Color.green.opacity(0.1) : Color.blue.opacity(0.1))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(result?.isValid == true ? Color.green.opacity(0.3) : Color.blue.opacity(0.3), lineWidth: 1)
+        )
+    }
+    
+    private func runDeepVerification() {
+        isVerifying = true
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let verificationResult = CertificationVerifier.shared.verifyAttestedImage(attestedImage)
+            
+            DispatchQueue.main.async {
+                self.result = verificationResult
+                self.isVerifying = false
+                self.showDetails = true
+            }
         }
     }
 }

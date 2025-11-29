@@ -34,6 +34,7 @@ struct GalleryView: View {
     @State private var sortOption: SortOption = .newest
     @State private var showFilters = false
     @State private var filters = FilterOptions()
+    @State private var showVerifyAll = false  // New: Verify all photos
     
     private let columns = [
         GridItem(.adaptive(minimum: 100, maximum: 150), spacing: 2)
@@ -256,6 +257,10 @@ struct GalleryView: View {
                         }
                         
                         Menu {
+                            Button(action: { showVerifyAll = true }) {
+                                Label("Verify All Photos", systemImage: "checkmark.shield")
+                            }
+                            
                             Button(action: exportAll) {
                                 Label("Export All", systemImage: "square.and.arrow.up")
                             }
@@ -278,6 +283,9 @@ struct GalleryView: View {
                    selectedIndex < certifiedImages.count {
                     ImageDetailView(imageDict: certifiedImages[selectedIndex])
                 }
+            }
+            .sheet(isPresented: $showVerifyAll) {
+                VerifyAllPhotosView()
             }
             .onAppear {
                 loadCertifiedImages()
@@ -382,6 +390,8 @@ struct ImageDetailView: View {
     @State private var showAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
+    @State private var realityCheck: PhotoRealityCheck?
+    @State private var isCheckingReality = false
     
     var image: UIImage? {
         // Handle both Data and base64 String formats
@@ -421,6 +431,13 @@ struct ImageDetailView: View {
                         .padding()
                         .background(Color.green.opacity(0.1))
                         .cornerRadius(12)
+                        
+                        // Reality Check Section
+                        RealityCheckSection(
+                            imageDict: imageDict,
+                            result: $realityCheck,
+                            isChecking: $isCheckingReality
+                        )
                         
                         // Cryptographic Details
                         VStack(alignment: .leading, spacing: 12) {
@@ -885,4 +902,120 @@ struct ShareSheet: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+// MARK: - Reality Check Section (ZK Proof Verification)
+
+struct RealityCheckSection: View {
+    let imageDict: [String: Any]
+    @Binding var result: PhotoRealityCheck?
+    @Binding var isChecking: Bool
+    @State private var showDetails = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("🔐 Is This Photo REAL?")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                if result != nil {
+                    Button(showDetails ? "Hide" : "Details") {
+                        withAnimation { showDetails.toggle() }
+                    }
+                    .font(.caption)
+                }
+            }
+            
+            if let result = result {
+                // Result display
+                HStack(spacing: 16) {
+                    Text(result.emoji)
+                        .font(.system(size: 40))
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(result.isReal ? "REAL - ZK Verified!" : "Needs Review")
+                            .font(.headline)
+                            .foregroundColor(result.isReal ? .green : .orange)
+                        
+                        Text("Confidence: \(result.confidence)%")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                }
+                
+                if showDetails {
+                    Divider()
+                    
+                    ForEach(result.details, id: \.self) { detail in
+                        Text(detail)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Text("Proof: \(result.proofType)")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                        .padding(.top, 4)
+                }
+            } else if isChecking {
+                HStack {
+                    ProgressView()
+                    Text("Verifying ZK proof...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } else {
+                Button(action: checkReality) {
+                    HStack {
+                        Image(systemName: "checkmark.shield")
+                        Text("Check if Photo is REAL")
+                    }
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.blue)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(result?.isReal == true ? Color.green.opacity(0.1) : Color.blue.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(result?.isReal == true ? Color.green.opacity(0.3) : Color.blue.opacity(0.2), lineWidth: 1)
+        )
+        .onAppear {
+            // Auto-check when view appears
+            if result == nil {
+                checkReality()
+            }
+        }
+    }
+    
+    private func checkReality() {
+        isChecking = true
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let checkResult = PhotoRealityChecker.shared.isPhotoReal(imageDict)
+            
+            DispatchQueue.main.async {
+                self.result = checkResult
+                self.isChecking = false
+                self.showDetails = true
+                
+                if checkResult.isReal {
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                }
+            }
+        }
+    }
 }
