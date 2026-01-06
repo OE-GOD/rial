@@ -26,14 +26,13 @@ const dbConfig = process.env.DATABASE_URL ? {
   connectionTimeoutMillis: 2000,
 };
 
-// Redis configuration
+// Redis configuration - disabled by default for local development
 const redisConfig = {
   host: process.env.REDIS_HOST || 'localhost',
   port: process.env.REDIS_PORT || 6379,
   password: process.env.REDIS_PASSWORD,
-  retry_strategy: (times) => {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
+  socket: {
+    reconnectStrategy: false // Don't retry if Redis is unavailable
   }
 };
 
@@ -44,31 +43,54 @@ let redisClient = null;
 // Initialize database connections
 async function initDatabase() {
   try {
+    // Skip database if USE_DATABASE is false
+    if (process.env.USE_DATABASE === 'false') {
+      console.log('⚠️ Database disabled - running in memory mode');
+      return { pool: null, redisClient: null };
+    }
+
     // PostgreSQL connection
     console.log('🔌 Connecting to PostgreSQL...');
     pool = new Pool(dbConfig);
 
-    // Test connection
-    const client = await pool.connect();
-    console.log('✅ PostgreSQL connected successfully');
+    // Test connection with timeout
+    try {
+      const client = await pool.connect();
+      console.log('✅ PostgreSQL connected successfully');
 
-    // Create tables if they don't exist
-    await createTables(client);
-    client.release();
+      // Create tables if they don't exist
+      await createTables(client);
+      client.release();
+    } catch (pgError) {
+      console.log('⚠️ PostgreSQL not available - running in memory mode');
+      console.log('   To use database, set DATABASE_URL or run PostgreSQL locally');
+      pool = null;
+      return { pool: null, redisClient: null };
+    }
 
-    // Redis connection
-    console.log('🔌 Connecting to Redis...');
-    redisClient = redis.createClient(redisConfig);
+    // Redis connection (optional - skip if not available)
+    if (process.env.REDIS_ENABLED === 'true') {
+      try {
+        console.log('🔌 Connecting to Redis...');
+        redisClient = redis.createClient(redisConfig);
 
-    redisClient.on('connect', () => {
-      console.log('✅ Redis connected successfully');
-    });
+        redisClient.on('connect', () => {
+          console.log('✅ Redis connected successfully');
+        });
 
-    redisClient.on('error', (err) => {
-      console.error('❌ Redis connection error:', err.message);
-    });
+        redisClient.on('error', (err) => {
+          console.log('⚠️ Redis error:', err.message);
+        });
 
-    await redisClient.connect();
+        await redisClient.connect();
+      } catch (redisError) {
+        console.log('⚠️ Redis not available - running without cache');
+        redisClient = null;
+      }
+    } else {
+      console.log('⚠️ Redis disabled - running without cache (set REDIS_ENABLED=true to enable)');
+      redisClient = null;
+    }
 
     console.log('🎉 Database initialization complete');
     return { pool, redisClient };

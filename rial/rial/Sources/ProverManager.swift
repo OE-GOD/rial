@@ -79,21 +79,16 @@ class ProverManager {
     
     static let shared = ProverManager()
     
-    // Backend URL configuration - FORCE PUBLIC URL WITH DATABASE
+    // Backend URL configuration - configurable via Settings
+    private static let defaultBackendURL = "https://api.trueshot.app"
+
     private var baseURL: String {
-        // FORCE use of public URL with database (ignore settings for now)
-        let publicURL = "https://merchants-technique-prove-joining.trycloudflare.com"
-        print("🔧 USING PUBLIC URL WITH DATABASE: \(publicURL)")
-        return publicURL
-        
-        // Uncomment below to re-enable settings:
-        /*
+        // Check for custom URL in settings first
         if let customURL = UserDefaults.standard.string(forKey: "backendURL"), !customURL.isEmpty {
-            print("🔧 Using custom backend URL: \(customURL)")
             return customURL
         }
-        return publicURL
-        */
+        // Fall back to default production URL
+        return ProverManager.defaultBackendURL
     }
     
     private var proveURL: URL? {

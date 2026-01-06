@@ -11,11 +11,13 @@ const API_CACHE = 'zk-img-api-v1.0.0';
 // Files to cache immediately
 const STATIC_FILES = [
   '/',
+  '/index.html',
+  '/app.js',
   '/photo-verifier.html',
   '/manifest.json',
   '/sw.js',
-  '/icon-192x192.png',
-  '/icon-512x512.png'
+  '/admin-dashboard.html',
+  '/verify.html'
 ];
 
 // API endpoints to cache

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <title>TrueShot</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg: #000000;
+            --bg-elevated: #1c1c1e;
+            --text: #ffffff;
+            --text-secondary: rgba(255,255,255,0.6);
+            --yellow: #ffcc00;
+            --blue: #0a84ff;
+            --green: #30d158;
+            --red: #ff453a;
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+        }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased;
+        }
+
+        /* App Container */
+        .app { height: 100%; display: flex; flex-direction: column; }
+
+        /* Camera View */
+        .camera-view { flex: 1; position: relative; background: #000; display: flex; flex-direction: column; }
+
+        /* Top Bar */
+        .top-bar {
+            position: absolute; top: 0; left: 0; right: 0; z-index: 50;
+            padding: calc(var(--safe-top) + 10px) 16px 12px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .logo { font-size: 20px; font-weight: 700; }
+        .status-badge {
+            background: rgba(48,209,88,0.2); color: var(--green);
+            padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .status-badge::before {
+            content: ''; width: 6px; height: 6px; background: var(--green);
+            border-radius: 50%; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+        .top-controls { display: flex; gap: 10px; }
+        .ctrl-btn {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.15); border: none; color: white;
+            font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .ctrl-btn.live-on { background: var(--yellow); color: black; font-size: 10px; font-weight: 700; width: auto; padding: 0 10px; }
+
+        /* Viewfinder */
+        .viewfinder {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 70px 10px 180px;
+        }
+        .viewfinder-frame {
+            position: relative; width: 100%; max-width: 380px; aspect-ratio: 3/4;
+            background: #111; border-radius: 12px; overflow: hidden;
+        }
+        #video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; display: none;
+        }
+        #cameraPlaceholder {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: rgba(255,255,255,0.4);
+        }
+        #cameraPlaceholder .icon { font-size: 48px; margin-bottom: 12px; }
+        .live-badge {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(0,0,0,0.5); color: white; padding: 4px 8px;
+            border-radius: 6px; font-size: 11px; font-weight: 600;
+            display: none; align-items: center; gap: 4px;
+        }
+        .live-badge::before {
+            content: ''; width: 6px; height: 6px; background: var(--red);
+            border-radius: 50%; animation: pulse 1s infinite;
+        }
+        .live-badge.show { display: flex; }
+
+        /* Bottom Controls */
+        .bottom-controls {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 20px 20px calc(var(--safe-bottom) + 16px);
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        }
+        .mode-bar {
+            display: flex; justify-content: center; gap: 16px; margin-bottom: 24px;
+        }
+        .mode-btn {
+            background: none; border: none; color: rgba(255,255,255,0.5);
+            font-size: 13px; font-weight: 500; cursor: pointer; padding: 6px 12px;
+        }
+        .mode-btn.active { color: var(--yellow); }
+        .shutter-row {
+            display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+        }
+        .side-btn {
+            width: 50px; height: 50px; border-radius: 12px; background: #222;
+            border: none; font-size: 24px; cursor: pointer;
+        }
+        .shutter-btn {
+            width: 72px; height: 72px; border-radius: 50%; background: transparent;
+            border: 4px solid white; cursor: pointer; position: relative;
+        }
+        .shutter-btn::after {
+            content: ''; position: absolute; inset: 4px;
+            background: white; border-radius: 50%; transition: transform 0.1s;
+        }
+        .shutter-btn:active::after { transform: scale(0.9); }
+
+        /* Panels */
+        .panel {
+            position: fixed; inset: 0; background: var(--bg); z-index: 100;
+            transform: translateX(100%); transition: transform 0.3s ease;
+            display: flex; flex-direction: column;
+        }
+        .panel.active { transform: translateX(0); }
+        .panel-header {
+            padding: calc(var(--safe-top) + 12px) 16px 12px;
+            background: var(--bg-elevated);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .panel-title { font-size: 17px; font-weight: 600; }
+        .panel-close {
+            background: none; border: none; color: var(--blue);
+            font-size: 17px; cursor: pointer;
+        }
+        .panel-body { flex: 1; padding: 16px; overflow-y: auto; }
+
+        /* List Items */
+        .list-group { background: var(--bg-elevated); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+        .list-item {
+            display: flex; align-items: center; padding: 14px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: none; border-left: none; border-right: none; border-top: none;
+            width: 100%; color: white; font-size: 16px; cursor: pointer; text-align: left;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .list-icon { font-size: 24px; margin-right: 12px; }
+
+        /* Preview Sheet */
+        .preview-sheet {
+            position: fixed; inset: 0; background: #000; z-index: 150;
+            display: none; flex-direction: column;
+        }
+        .preview-sheet.active { display: flex; }
+        .preview-image {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 20px; position: relative;
+        }
+        .preview-image img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+        .preview-actions {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px; padding-bottom: calc(20px + var(--safe-bottom));
+        }
+        .btn-retake {
+            background: none; border: none; color: white;
+            font-size: 18px; padding: 12px 20px; cursor: pointer;
+        }
+        .btn-use {
+            background: var(--blue); border: none; color: white;
+            font-size: 18px; font-weight: 600; padding: 12px 24px;
+            border-radius: 25px; cursor: pointer;
+        }
+
+        /* Processing Overlay */
+        .processing {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 200; display: none; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .processing.active { display: flex; }
+        .processing-spinner {
+            width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: var(--blue); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toast */
+        .toast {
+            position: fixed; top: calc(var(--safe-top) + 60px); left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--bg-elevated); padding: 12px 20px; border-radius: 25px;
+            font-size: 15px; z-index: 300; opacity: 0; transition: all 0.3s;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Gallery */
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+        .gallery-item { aspect-ratio: 1; background: #222; cursor: pointer; position: relative; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-badge {
+            position: absolute; bottom: 4px; right: 4px;
+            background: var(--green); width: 20px; height: 20px;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 12px;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            z-index: 250; display: none; align-items: flex-end; justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            width: 100%; max-height: 85vh; background: var(--bg-elevated);
+            border-radius: 16px 16px 0 0; overflow: hidden;
+        }
+        .modal-header {
+            padding: 16px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+        .modal-header::before {
+            content: ''; position: absolute; top: 8px; left: 50%;
+            transform: translateX(-50%); width: 36px; height: 4px;
+            background: rgba(255,255,255,0.3); border-radius: 2px;
+        }
+        .modal-body { padding: 16px; max-height: 60vh; overflow-y: auto; }
+        .modal-close {
+            position: absolute; top: 12px; right: 12px;
+            background: rgba(255,255,255,0.1); border: none; color: white;
+            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+        }
+
+        .hidden { display: none !important; }
+        #canvas { display: none; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+        /* Input */
+        .input {
+            width: 100%; padding: 14px 16px; background: var(--bg-elevated);
+            border: none; border-radius: 12px; color: white; font-size: 16px;
+        }
+        .input::placeholder { color: rgba(255,255,255,0.4); }
+
+        /* Stats */
+        .stats-row { display: flex; justify-content: space-around; padding: 16px; background: var(--bg-elevated); border-radius: 12px; margin-bottom: 16px; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 24px; font-weight: 700; }
+        .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Camera View -->
+        <div class="camera-view">
+            <div class="top-bar">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="logo">TrueShot</span>
+                    <div class="status-badge" id="statusBadge">ZK Ready</div>
+                </div>
+                <div class="top-controls">
+                    <button class="ctrl-btn live-on" id="liveToggle">LIVE</button>
+                    <button class="ctrl-btn" id="flashBtn">⚡</button>
+                    <button class="ctrl-btn" id="gridBtn">▦</button>
+                </div>
+            </div>
+
+            <div class="viewfinder" id="viewfinderArea">
+                <div class="viewfinder-frame" id="viewfinderFrame">
+                    <div id="cameraPlaceholder">
+                        <div class="icon">📸</div>
+                        <div>Tap to start camera</div>
+                    </div>
+                    <video id="video" autoplay playsinline muted></video>
+                    <canvas id="canvas"></canvas>
+                    <div class="live-badge" id="liveBadge">LIVE</div>
+                </div>
+            </div>
+
+            <div class="bottom-controls">
+                <div class="mode-bar">
+                    <button class="mode-btn" data-mode="gallery">Gallery</button>
+                    <button class="mode-btn" data-mode="upload">Upload</button>
+                    <button class="mode-btn active" data-mode="photo">Photo</button>
+                    <button class="mode-btn" data-mode="video">Video</button>
+                    <button class="mode-btn" data-mode="verify">Verify</button>
+                </div>
+                <div class="shutter-row">
+                    <button class="side-btn" id="galleryBtn">🖼️</button>
+                    <button class="shutter-btn" id="shutterBtn"></button>
+                    <button class="side-btn" id="flipBtn">🔄</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Panel -->
+        <div class="panel" id="galleryPanel">
+            <div class="panel-header">
+                <span class="panel-title">Verified Photos</span>
+                <button class="panel-close" id="closeGallery">Done</button>
+            </div>
+            <div class="panel-body">
+                <div class="stats-row">
+                    <div class="stat"><div class="stat-value" id="totalPhotos">0</div><div class="stat-label">Photos</div></div>
+                    <div class="stat"><div class="stat-value" id="zkProofs">0</div><div class="stat-label">ZK Proofs</div></div>
+                    <div class="stat"><div class="stat-value">100%</div><div class="stat-label">Verified</div></div>
+                </div>
+                <div class="gallery-grid" id="galleryGrid">
+                    <div class="empty-state" style="grid-column:1/-1;">
+                        <div class="icon">📷</div>
+                        <div>No photos yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Panel -->
+        <div class="panel" id="uploadPanel">
+            <div class="panel-header">
+                <span class="panel-title">Upload</span>
+                <button class="panel-close" id="closeUpload">Done</button>
+            </div>
+            <div class="panel-body">
+                <div class="list-group">
+                    <button class="list-item" id="uploadPhotoBtn">
+                        <span class="list-icon">📁</span>
+                        <span>Upload Photo</span>
+                    </button>
+                    <button class="list-item" id="editUploadBtn">
+                        <span class="list-icon">✂️</span>
+                        <span>Edit Photo</span>
+                    </button>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" class="hidden">
+                <input type="file" id="editFileInput" accept="image/*" class="hidden">
+            </div>
+        </div>
+
+        <!-- Video Panel -->
+        <div class="panel" id="videoPanel">
+            <div class="panel-header">
+                <span class="panel-title">Video</span>
+                <button class="panel-close" id="closeVideo">Done</button>
+            </div>
+            <div class="panel-body">
+                <div class="list-group">
+                    <button class="list-item" id="recordVideoBtn">
+                        <span class="list-icon">🎬</span>
+                        <span>Record Video</span>
+                    </button>
+                    <button class="list-item" id="uploadVideoBtn">
+                        <span class="list-icon">📁</span>
+                        <span>Upload Video</span>
+                    </button>
+                </div>
+                <input type="file" id="videoFileInput" accept="video/*" class="hidden">
+            </div>
+        </div>
+
+        <!-- Verify Panel -->
+        <div class="panel" id="verifyPanel">
+            <div class="panel-header">
+                <span class="panel-title">Verify</span>
+                <button class="panel-close" id="closeVerify">Done</button>
+            </div>
+            <div class="panel-body">
+                <div class="list-group">
+                    <button class="list-item" id="verifyUploadBtn">
+                        <span class="list-icon">🔍</span>
+                        <span>Upload to Verify</span>
+                    </button>
+                </div>
+                <input type="file" id="verifyFileInput" accept="image/*" class="hidden">
+                <p style="color:var(--text-secondary); text-align:center; margin:16px 0 8px;">Or enter share code</p>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="shareCodeInput" class="input" placeholder="ABC12345" style="flex:1;">
+                    <button class="btn-use" id="verifyCodeBtn" style="padding:14px 20px;">Verify</button>
+                </div>
+                <div id="verifyResults"></div>
+            </div>
+        </div>
+
+        <!-- Preview Sheet -->
+        <div class="preview-sheet" id="previewSheet">
+            <div class="preview-image">
+                <img id="previewImage" alt="Preview">
+            </div>
+            <div class="preview-actions">
+                <button class="btn-retake" id="retakeBtn">Retake</button>
+                <button class="btn-use" id="certifyBtn">Use Photo</button>
+            </div>
+        </div>
+
+        <!-- Processing -->
+        <div class="processing" id="processingSection">
+            <div class="processing-spinner"></div>
+            <div id="processingText">Processing...</div>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast"></div>
+
+        <!-- Photo Modal -->
+        <div class="modal" id="photoModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span>Photo Details</span>
+                    <button class="modal-close" id="closeModal">✕</button>
+                </div>
+                <div class="modal-body" id="modalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/crypto.js"></script>
+    <script src="/webauthn-crypto.js"></script>
+    <script src="/ai-detector.js"></script>
+    <script src="/app.js"></script>
+
+    <script>
+    (function() {
+        // Camera State
+        const cam = {
+            stream: null,
+            facing: 'environment',
+            liveEnabled: true,
+            capturing: false
+        };
+
+        // Elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const liveBadge = document.getElementById('liveBadge');
+        const previewSheet = document.getElementById('previewSheet');
+        const previewImg = document.getElementById('previewImage');
+        const toast = document.getElementById('toast');
+
+        // Panels
+        const panels = {
+            gallery: document.getElementById('galleryPanel'),
+            upload: document.getElementById('uploadPanel'),
+            video: document.getElementById('videoPanel'),
+            verify: document.getElementById('verifyPanel')
+        };
+
+        // Show Toast
+        window.showToast = function(msg, duration = 3000) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        };
+
+        // Start Camera
+        async function startCamera() {
+            if (cam.stream) return;
+
+            // Check HTTPS
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                showToast('HTTPS required for camera');
+                return;
+            }
+
+            try {
+                cam.stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: cam.facing, width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false
+                });
+
+                video.srcObject = cam.stream;
+                video.muted = true;
+                await video.play();
+
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+                liveBadge.classList.add('show');
+
+                showToast('Camera ready');
+            } catch (err) {
+                console.error('Camera error:', err);
+                if (err.name === 'NotAllowedError') {
+                    showToast('Camera blocked - check settings');
+                } else {
+                    showToast('Camera error: ' + err.message);
+                }
+            }
+        }
+
+        // Stop Camera
+        function stopCamera() {
+            if (cam.stream) {
+                cam.stream.getTracks().forEach(t => t.stop());
+                cam.stream = null;
+                video.style.display = 'none';
+                placeholder.style.display = 'flex';
+                liveBadge.classList.remove('show');
+            }
+        }
+
+        // Capture Photo
+        async function capturePhoto() {
+            if (!cam.stream || cam.capturing) return;
+            if (!video.videoWidth) {
+                showToast('Camera not ready');
+                return;
+            }
+
+            cam.capturing = true;
+
+            // Visual feedback
+            document.getElementById('shutterBtn').style.transform = 'scale(0.95)';
+
+            try {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                previewImg.src = dataUrl;
+
+                // Convert to blob and store
+                const response = await fetch(dataUrl);
+                const blob = await response.blob();
+
+                if (typeof state !== 'undefined') {
+                    state.currentPhoto = blob;
+                }
+
+                previewSheet.classList.add('active');
+
+                // Haptic feedback
+                if (navigator.vibrate) navigator.vibrate(10);
+
+                showToast('Photo captured!');
+            } catch (err) {
+                console.error('Capture error:', err);
+                showToast('Capture failed');
+            } finally {
+                document.getElementById('shutterBtn').style.transform = '';
+                cam.capturing = false;
+            }
+        }
+
+        // Flip Camera
+        async function flipCamera() {
+            cam.facing = cam.facing === 'environment' ? 'user' : 'environment';
+            stopCamera();
+            await startCamera();
+            video.style.transform = cam.facing === 'user' ? 'scaleX(-1)' : '';
+        }
+
+        // Close all panels
+        function closeAllPanels() {
+            Object.values(panels).forEach(p => p.classList.remove('active'));
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Viewfinder tap to start camera
+            document.getElementById('viewfinderArea').addEventListener('click', function(e) {
+                if (!cam.stream && !e.target.closest('.shutter-btn')) {
+                    startCamera();
+                }
+            });
+
+            // Shutter button
+            document.getElementById('shutterBtn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (!cam.stream) {
+                    startCamera();
+                } else {
+                    capturePhoto();
+                }
+            });
+
+            // Flip camera
+            document.getElementById('flipBtn').addEventListener('click', flipCamera);
+
+            // Gallery button
+            document.getElementById('galleryBtn').addEventListener('click', function() {
+                document.querySelector('[data-mode="gallery"]').click();
+            });
+
+            // Live toggle
+            document.getElementById('liveToggle').addEventListener('click', function() {
+                cam.liveEnabled = !cam.liveEnabled;
+                this.classList.toggle('live-on', cam.liveEnabled);
+                this.textContent = cam.liveEnabled ? 'LIVE' : 'OFF';
+                showToast(cam.liveEnabled ? 'Live Photo ON' : 'Live Photo OFF');
+            });
+
+            // Mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const mode = this.dataset.mode;
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    closeAllPanels();
+
+                    if (mode === 'photo') {
+                        startCamera();
+                    } else if (panels[mode]) {
+                        panels[mode].classList.add('active');
+                        if (mode === 'gallery' && typeof loadGallery === 'function') {
+                            loadGallery();
+                        }
+                    }
+                });
+            });
+
+            // Close panel buttons
+            ['closeGallery', 'closeUpload', 'closeVideo', 'closeVerify'].forEach(id => {
+                document.getElementById(id)?.addEventListener('click', function() {
+                    closeAllPanels();
+                    document.querySelector('[data-mode="photo"]').click();
+                });
+            });
+
+            // Preview buttons
+            document.getElementById('retakeBtn').addEventListener('click', function() {
+                previewSheet.classList.remove('active');
+            });
+
+            document.getElementById('certifyBtn').addEventListener('click', function() {
+                previewSheet.classList.remove('active');
+                if (typeof certifyPhoto === 'function') {
+                    certifyPhoto();
+                } else {
+                    showToast('Photo saved!');
+                }
+            });
+
+            // Upload button
+            document.getElementById('uploadPhotoBtn')?.addEventListener('click', function() {
+                document.getElementById('fileInput').click();
+            });
+
+            // Verify upload button
+            document.getElementById('verifyUploadBtn')?.addEventListener('click', function() {
+                document.getElementById('verifyFileInput').click();
+            });
+
+            // Close modal
+            document.getElementById('closeModal')?.addEventListener('click', function() {
+                document.getElementById('photoModal').classList.remove('active');
+            });
+
+            // Verify code button
+            document.getElementById('verifyCodeBtn')?.addEventListener('click', function() {
+                if (typeof verifyByShareCode === 'function') {
+                    verifyByShareCode();
+                }
+            });
+        });
+
+        // Expose for app.js
+        window.startCamera = startCamera;
+        window.cameraState = cam;
+    })();
+    </script>
+</body>
+</html>
+
+
+

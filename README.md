@@ -18,6 +18,7 @@ Complete insurance fraud-prevention platform using cryptographic proofs, zero-kn
 
 ### **Enterprise Features:**
 - ✅ iOS app with forced in-app camera
+- ✅ **Web app (NEW!) - works on ALL devices** 🌐
 - ✅ Real-time verification feedback
 - ✅ Automatic offline fallback
 - ✅ Proof verification UI
@@ -35,6 +36,13 @@ cd backend
 npm install
 npm start
 # Runs on http://localhost:3000
+```
+
+### **Web App (NEW!):**
+```bash
+# Open in browser
+http://localhost:3000
+# Works on mobile, tablet, desktop - any device!
 ```
 
 ### **iOS App:**
@@ -67,11 +75,11 @@ Open http://localhost:3000/admin-dashboard.html
 
 ## 📊 **Technical Stack**
 
-- **Frontend:** iOS (Swift + SwiftUI)
+- **Frontend:** iOS (Swift + SwiftUI) + Web (HTML/JS/CSS PWA)
 - **Backend:** Node.js + Express
 - **Database:** PostgreSQL
 - **ZK Proofs:** Halo2 + Groth16
-- **Security:** Secure Enclave + Joi + Helmet
+- **Security:** Secure Enclave + Web Crypto + Joi + Helmet
 
 ---
 
@@ -79,7 +87,8 @@ Open http://localhost:3000/admin-dashboard.html
 
 **Backend:** ✅ Running & tested  
 **iOS App:** ✅ Built & improved  
-**Offline Mode:** ✅ Working  
+**Web App:** ✅ **NEW! Full-featured PWA** 🌐  
+**Offline Mode:** ✅ Working (both iOS & Web)  
 **Admin Dashboard:** ✅ Available  
 **Documentation:** ✅ Complete  
 **Production-Ready:** ✅ **YES**
@@ -88,6 +97,13 @@ Open http://localhost:3000/admin-dashboard.html
 
 ## 📚 **Documentation**
 
+### **Web App (NEW!):**
+- **WEB_APP_README.md** - Quick start guide
+- **WEB_APP_GUIDE.md** - Complete documentation
+- **WEB_APP_TEST.md** - Testing checklist
+- **WEB_APP_COMPLETE.md** - Build summary
+
+### **Other Docs:**
 See project documentation files for complete guides on setup, deployment, and usage.
 
 ---

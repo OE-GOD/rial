@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueShot Partner API v1 - Documentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --primary-dark: #6d28d9;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: rgba(148, 163, 184, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border);
+            padding: 2rem 0;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary) 0%, #06b6d4 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+        }
+
+        .version-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 3rem;
+        }
+
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 2rem;
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .sidebar h3:first-child { margin-top: 0; }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .sidebar a:hover {
+            color: var(--text-primary);
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .sidebar a.active {
+            color: var(--primary);
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        /* Content */
+        .content section {
+            margin-bottom: 4rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            margin: 2rem 0 1rem;
+            color: var(--text-primary);
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .method {
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .method.get { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .method.post { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .method.put { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .method.delete { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        .endpoint {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        /* Code blocks */
+        pre {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 1rem 0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(124, 58, 237, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .comment { color: #8b949e; }
+        .string { color: #a5d6ff; }
+        .number { color: #79c0ff; }
+        .keyword { color: #ff7b72; }
+        .property { color: #d2a8ff; }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        td code {
+            font-size: 0.8rem;
+        }
+
+        /* Response badges */
+        .response-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .response-badge.success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .response-badge.error { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        /* Try it section */
+        .try-it {
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .try-it h4 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .try-it input, .try-it textarea {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .try-it button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .try-it button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        #apiResponse {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #0d1117;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        /* Quick start */
+        .quick-start {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .quick-start h3 {
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .step {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .step-content p {
+            font-size: 0.9rem;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🔐</div>
+                <h1>TrueShot Partner API <span class="version-badge">v1</span></h1>
+            </div>
+            <p>REST API for insurance companies to verify photo authenticity using zero-knowledge proofs</p>
+        </header>
+
+        <div class="grid">
+            <aside class="sidebar">
+                <h3>Getting Started</h3>
+                <ul>
+                    <li><a href="#quick-start" class="active">Quick Start</a></li>
+                    <li><a href="#authentication">Authentication</a></li>
+                    <li><a href="#rate-limits">Rate Limits</a></li>
+                </ul>
+
+                <h3>Endpoints</h3>
+                <ul>
+                    <li><a href="#submit-photo">Submit Photo</a></li>
+                    <li><a href="#get-photo">Get Photo</a></li>
+                    <li><a href="#list-photos">List Photos</a></li>
+                    <li><a href="#quick-verify">Quick Verify</a></li>
+                    <li><a href="#verify-hash">Verify by Hash</a></li>
+                    <li><a href="#bulk-verify">Bulk Verify</a></li>
+                    <li><a href="#stats">Statistics</a></li>
+                </ul>
+
+                <h3>Webhooks</h3>
+                <ul>
+                    <li><a href="#configure-webhook">Configure Webhook</a></li>
+                    <li><a href="#webhook-events">Webhook Events</a></li>
+                </ul>
+
+                <h3>Reference</h3>
+                <ul>
+                    <li><a href="#errors">Error Codes</a></li>
+                    <li><a href="#recommendations">Recommendations</a></li>
+                </ul>
+            </aside>
+
+            <main class="content">
+                <section id="quick-start">
+                    <div class="quick-start">
+                        <h3>Quick Start</h3>
+                        <p>Get started with photo verification in 3 simple steps:</p>
+
+                        <div class="steps">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4>Get your API Key</h4>
+                                    <p>Use the test key <code>test_key_12345</code> for development</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4>Submit a Photo</h4>
+                                    <p>POST to <code>/api/v1/photos</code> with your image</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4>Check the Result</h4>
+                                    <p>Get instant verification with confidence score</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <pre><code><span class="comment"># Quick test with cURL</span>
+curl -X POST https://your-domain.com/api/v1/photos \
+  -H <span class="string">"X-API-Key: test_key_12345"</span> \
+  -F <span class="string">"image=@photo.jpg"</span></code></pre>
+                </section>
+
+                <section id="authentication">
+                    <h2>Authentication</h2>
+                    <p>All API requests require authentication via API key. Include your key in the <code>X-API-Key</code> header:</p>
+
+                    <pre><code>X-API-Key: your_api_key_here</code></pre>
+
+                    <p>You can also pass it as a query parameter (not recommended for production):</p>
+                    <pre><code>GET /api/v1/stats?api_key=your_api_key_here</code></pre>
+
+                    <div class="card">
+                        <h4>Test API Key</h4>
+                        <p>For development and testing, use:</p>
+                        <pre><code>test_key_12345</code></pre>
+                        <p style="color: var(--warning); font-size: 0.9rem;">This key has a rate limit of 100 requests/hour</p>
+                    </div>
+                </section>
+
+                <section id="rate-limits">
+                    <h2>Rate Limits</h2>
+                    <p>API requests are rate limited based on your plan tier:</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tier</th>
+                                <th>Requests/Hour</th>
+                                <th>Bulk Limit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Developer</td>
+                                <td>100</td>
+                                <td>10 photos</td>
+                            </tr>
+                            <tr>
+                                <td>Standard</td>
+                                <td>1,000</td>
+                                <td>50 photos</td>
+                            </tr>
+                            <tr>
+                                <td>Enterprise</td>
+                                <td>10,000</td>
+                                <td>100 photos</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Rate limit headers are included in every response:</p>
+                    <pre><code>X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 998
+X-RateLimit-Reset: 1703836800</code></pre>
+                </section>
+
+                <section id="submit-photo">
+                    <h2>Submit Photo for Verification</h2>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="endpoint">/api/v1/photos</span>
+                        </div>
+                        <p>Submit a photo for cryptographic verification. Returns verification result with confidence score.</p>
+
+                        <h4>Request Body (multipart/form-data)</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Type</th>
+                                    <th>Required</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>image</code></td>
+                                    <td>File</td>
+                                    <td>Yes</td>
+                                    <td>Image file (JPEG, PNG). Max 50MB</td>
+                                </tr>
+                                <tr>
+                                    <td><code>metadata</code></td>
+                                    <td>JSON</td>
+                                    <td>No</td>
+                                    <td>Additional metadata (GPS, device info)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>claim</code></td>
+                                    <td>JSON</td>
+                                    <td>No</td>
+                                    <td>C2PA claim data from TrueShot app</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Response</h4>
+                        <span class="response-badge success">200 OK</span>
+                        <pre><code>{
+  <span class="property">"success"</span>: <span class="keyword">true</span>,
+  <span class="property">"data"</span>: {
+    <span class="property">"photoId"</span>: <span class="string">"PH-lxyz123-a1b2c3d4"</span>,
+    <span class="property">"verified"</span>: <span class="keyword">true</span>,
+    <span class="property">"confidence"</span>: <span class="number">0.95</span>,
+    <span class="property">"recommendation"</span>: <span class="string">"APPROVE"</span>,
+    <span class="property">"checks"</span>: {
+      <span class="property">"signature"</span>: <span class="keyword">true</span>,
+      <span class="property">"merkleRoot"</span>: <span class="keyword">true</span>,
+      <span class="property">"metadata"</span>: <span class="keyword">true</span>,
+      <span class="property">"temporal"</span>: <span class="keyword">true</span>
+    },
+    <span class="property">"fraudRisk"</span>: <span class="string">"LOW"</span>,
+    <span class="property">"processingTimeMs"</span>: <span class="number">245</span>
+  }
+}</code></pre>
+                    </div>
+
+                    <div class="try-it">
+                        <h4>Try It</h4>
+                        <input type="text" id="apiKey" placeholder="API Key (e.g., test_key_12345)" value="test_key_12345">
+                        <input type="file" id="testImage" accept="image/*">
+                        <button onclick="testSubmitPhoto()">Submit Photo</button>
+                        <pre id="apiResponse"></pre>
+                    </div>
+                </section>
+
+                <section id="get-photo">
+                    <h2>Get Photo Details</h2>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method get">GET</span>
+                            <span class="endpoint">/api/v1/photos/:id</span>
+                        </div>
+                        <p>Retrieve verification details for a previously submitted photo.</p>
+
+                        <h4>Path Parameters</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>id</code></td>
+                                    <td>Photo ID returned from submission</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="list-photos">
+                    <h2>List Photos</h2>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method get">GET</span>
+                            <span class="endpoint">/api/v1/photos</span>
+                        </div>
+                        <p>List all verified photos for your account with pagination.</p>
+
+                        <h4>Query Parameters</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>limit</code></td>
+                                    <td>20</td>
+                                    <td>Number of results (max 100)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>offset</code></td>
+                                    <td>0</td>
+                                    <td>Pagination offset</td>
+                                </tr>
+                                <tr>
+                                    <td><code>verified</code></td>
+                                    <td>-</td>
+                                    <td>Filter by verified status (true/false)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>since</code></td>
+                                    <td>-</td>
+                                    <td>Filter by date (ISO 8601)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="quick-verify">
+                    <h2>Quick Verify</h2>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="endpoint">/api/v1/verify</span>
+                        </div>
+                        <p>Quickly verify a photo without storing it. Use for real-time verification.</p>
+                    </div>
+                </section>
+
+                <section id="verify-hash">
+                    <h2>Verify by Hash</h2>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method get">GET</span>
+                            <span class="endpoint">/api/v1/verify/:hash</span>
+                        </div>
+                        <p>Check if an image hash exists in the verification database.</p>
+                    </div>
+                </section>
+
+                <section id="bulk-verify">
+                    <h2>Bulk Verify</h2>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method post">POST</span>
+                            <span class="endpoint">/api/v1/bulk</span>
+                        </div>
+                        <p>Verify multiple photos in a single request (up to 50 photos).</p>
+
+                        <pre><code><span class="comment"># Bulk upload example</span>
+curl -X POST https://your-domain.com/api/v1/bulk \
+  -H <span class="string">"X-API-Key: your_api_key"</span> \
+  -F <span class="string">"images=@photo1.jpg"</span> \
+  -F <span class="string">"images=@photo2.jpg"</span> \
+  -F <span class="string">"images=@photo3.jpg"</span></code></pre>
+                    </div>
+                </section>
+
+                <section id="stats">
+                    <h2>Statistics</h2>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method get">GET</span>
+                            <span class="endpoint">/api/v1/stats</span>
+                        </div>
+                        <p>Get usage statistics for your account.</p>
+
+                        <h4>Response</h4>
+                        <pre><code>{
+  <span class="property">"success"</span>: <span class="keyword">true</span>,
+  <span class="property">"data"</span>: {
+    <span class="property">"partner"</span>: {
+      <span class="property">"id"</span>: <span class="string">"partner_abc123"</span>,
+      <span class="property">"name"</span>: <span class="string">"Acme Insurance"</span>,
+      <span class="property">"tier"</span>: <span class="string">"enterprise"</span>
+    },
+    <span class="property">"photos"</span>: {
+      <span class="property">"total"</span>: <span class="number">1250</span>,
+      <span class="property">"verified"</span>: <span class="number">1180</span>,
+      <span class="property">"unverified"</span>: <span class="number">70</span>,
+      <span class="property">"averageConfidence"</span>: <span class="number">0.89</span>
+    },
+    <span class="property">"usage"</span>: {
+      <span class="property">"currentHour"</span>: <span class="number">45</span>,
+      <span class="property">"limit"</span>: <span class="number">10000</span>,
+      <span class="property">"remaining"</span>: <span class="number">9955</span>
+    }
+  }
+}</code></pre>
+                    </div>
+                </section>
+
+                <section id="configure-webhook">
+                    <h2>Configure Webhook</h2>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="method put">PUT</span>
+                            <span class="endpoint">/api/v1/webhook</span>
+                        </div>
+                        <p>Set or update your webhook URL to receive verification events.</p>
+
+                        <pre><code>{
+  <span class="property">"url"</span>: <span class="string">"https://your-server.com/webhooks/trueshot"</span>
+}</code></pre>
+                    </div>
+                </section>
+
+                <section id="webhook-events">
+                    <h2>Webhook Events</h2>
+                    <p>When configured, webhooks are sent for the following events:</p>
+
+                    <div class="card">
+                        <h4>photo.verified</h4>
+                        <p>Sent when a photo verification is complete.</p>
+                        <pre><code>{
+  <span class="property">"event"</span>: <span class="string">"photo.verified"</span>,
+  <span class="property">"data"</span>: {
+    <span class="property">"id"</span>: <span class="string">"PH-lxyz123-a1b2c3d4"</span>,
+    <span class="property">"verified"</span>: <span class="keyword">true</span>,
+    <span class="property">"confidence"</span>: <span class="number">0.95</span>,
+    <span class="property">"createdAt"</span>: <span class="string">"2024-01-15T10:30:00Z"</span>
+  }
+}</code></pre>
+                    </div>
+                </section>
+
+                <section id="errors">
+                    <h2>Error Codes</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>HTTP Status</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>unauthorized</code></td>
+                                <td>401</td>
+                                <td>Missing or invalid API key</td>
+                            </tr>
+                            <tr>
+                                <td><code>rate_limit_exceeded</code></td>
+                                <td>429</td>
+                                <td>Too many requests</td>
+                            </tr>
+                            <tr>
+                                <td><code>missing_image</code></td>
+                                <td>400</td>
+                                <td>No image file in request</td>
+                            </tr>
+                            <tr>
+                                <td><code>invalid_json</code></td>
+                                <td>400</td>
+                                <td>Malformed JSON in request body</td>
+                            </tr>
+                            <tr>
+                                <td><code>not_found</code></td>
+                                <td>404</td>
+                                <td>Resource not found</td>
+                            </tr>
+                            <tr>
+                                <td><code>verification_failed</code></td>
+                                <td>500</td>
+                                <td>Server error during verification</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="recommendations">
+                    <h2>Recommendations</h2>
+                    <p>The API returns one of the following recommendations based on confidence score:</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Recommendation</th>
+                                <th>Confidence</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>APPROVE</code></td>
+                                <td>>= 90%</td>
+                                <td>High confidence - safe to approve</td>
+                            </tr>
+                            <tr>
+                                <td><code>APPROVE_WITH_REVIEW</code></td>
+                                <td>70-89%</td>
+                                <td>Likely authentic - quick review recommended</td>
+                            </tr>
+                            <tr>
+                                <td><code>MANUAL_REVIEW</code></td>
+                                <td>50-69%</td>
+                                <td>Some concerns - manual review required</td>
+                            </tr>
+                            <tr>
+                                <td><code>REJECT</code></td>
+                                <td>< 50%</td>
+                                <td>High fraud risk - reject or investigate</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        async function testSubmitPhoto() {
+            const apiKey = document.getElementById('apiKey').value;
+            const fileInput = document.getElementById('testImage');
+            const responseEl = document.getElementById('apiResponse');
+
+            if (!fileInput.files[0]) {
+                alert('Please select an image file');
+                return;
+            }
+
+            responseEl.style.display = 'block';
+            responseEl.textContent = 'Uploading and verifying...';
+
+            try {
+                const formData = new FormData();
+                formData.append('image', fileInput.files[0]);
+
+                const response = await fetch('/api/v1/photos', {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': apiKey
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                responseEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        // Smooth scroll for sidebar links
+        document.querySelectorAll('.sidebar a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth' });
+
+                // Update active state
+                document.querySelectorAll('.sidebar a').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

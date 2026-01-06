@@ -31,7 +31,7 @@ struct SettingsView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
-                        TextField("http://10.0.0.132:3000", text: $backendURL)
+                        TextField("https://api.trueshot.app", text: $backendURL)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .autocapitalization(.none)
                             .keyboardType(.URL)

@@ -1,8 +1,8 @@
 {
-  "name": "ZK-IMG Photo Authenticity Verifier",
-  "short_name": "ZK-IMG",
-  "description": "Verify photo authenticity with zero-knowledge proofs",
-  "start_url": "/photo-verifier.html",
+  "name": "TrueShot - Verified Photo Evidence",
+  "short_name": "TrueShot",
+  "description": "Verified Photo Evidence for Insurance Claims using Zero-Knowledge Proofs",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#667eea",
