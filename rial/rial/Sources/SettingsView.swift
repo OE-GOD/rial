@@ -152,19 +152,25 @@ struct SettingsView: View {
                 
                 // Advanced Section
                 Section {
+                    NavigationLink(destination: OfflineProofTestView()) {
+                        Label("Test Offline Proofs", systemImage: "airplane.circle")
+                    }
+
                     Button(role: .destructive, action: clearCache) {
                         Label("Clear Cache", systemImage: "trash")
                     }
-                    
+
                     Button(action: exportLogs) {
                         Label("Export Debug Logs", systemImage: "doc.text")
                     }
-                    
+
                     NavigationLink(destination: OnboardingView()) {
                         Label("View Tutorial", systemImage: "graduationcap")
                     }
                 } header: {
                     Text("Advanced")
+                } footer: {
+                    Text("Offline proofs work without network connection")
                 }
             }
             .navigationTitle("Settings")
