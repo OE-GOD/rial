@@ -1373,6 +1373,17 @@ try {
     logger.info('   - Get chain: GET /api/transform/chain/:id');
     logger.info('   - Verify chain: POST /api/transform/verify');
     logger.info('   - Supported: GET /api/transform/supported');
+
+    // Batch Privacy Proofs API
+    const batchProofsAPI = require('./routes/batch-proofs-api');
+    app.use('/api/batch', batchProofsAPI);
+    logger.info('📦 Batch Privacy Proofs API loaded');
+    logger.info('   - Batch commit: POST /api/batch/commit');
+    logger.info('   - Batch verify: POST /api/batch/verify');
+    logger.info('   - Export JSON: POST /api/batch/export/json');
+    logger.info('   - Export QR: POST /api/batch/export/qr');
+    logger.info('   - Video commit: POST /api/batch/video/commit');
+    logger.info('   - Status: GET /api/batch/status');
 } catch (error) {
     logger.warn('Liveness API not available:', error.message);
 }
