@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rial Image Verification - Blockchain Proof</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .input-group {
+            margin-bottom: 30px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            display: block;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            display: block;
+        }
+        
+        .result h2 {
+            margin-bottom: 15px;
+            color: #155724;
+        }
+        
+        .result.error h2 {
+            color: #721c24;
+        }
+        
+        .proof-item {
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .proof-item strong {
+            display: inline-block;
+            width: 150px;
+            color: #666;
+        }
+        
+        .proof-item span {
+            color: #333;
+            word-break: break-all;
+        }
+        
+        .anti-ai-proof {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+        }
+        
+        .anti-ai-proof h3 {
+            margin-bottom: 15px;
+            color: #856404;
+        }
+        
+        .check-item {
+            padding: 8px 0;
+            color: #856404;
+        }
+        
+        .check-item.valid::before {
+            content: '✅ ';
+        }
+        
+        .check-item.invalid::before {
+            content: '❌ ';
+        }
+        
+        .blockchain-link {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .blockchain-link a {
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .blockchain-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Rial Image Verification</h1>
+            <p>Verify image authenticity with blockchain proof</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-group">
+                <label for="attestationId">Attestation ID</label>
+                <input 
+                    type="text" 
+                    id="attestationId" 
+                    placeholder="0x123abc..." 
+                    value=""
+                >
+                <small style="color: #666; margin-top: 5px; display: block;">
+                    Enter the blockchain attestation ID to verify the image
+                </small>
+            </div>
+            
+            <button class="btn" onclick="verifyImage()">Verify Image</button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Verifying on blockchain...</p>
+            </div>
+            
+            <div class="result" id="result"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Get attestation ID from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const attestationIdParam = urlParams.get('id');
+        if (attestationIdParam) {
+            document.getElementById('attestationId').value = attestationIdParam;
+            // Auto-verify if ID in URL
+            setTimeout(() => verifyImage(), 500);
+        }
+        
+        async function verifyImage() {
+            const attestationId = document.getElementById('attestationId').value.trim();
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            
+            if (!attestationId) {
+                showError('Please enter an attestation ID');
+                return;
+            }
+            
+            // Show loading
+            resultDiv.style.display = 'none';
+            loadingDiv.classList.add('active');
+            
+            try {
+                // Call backend verification endpoint
+                const response = await fetch(`/blockchain/verify/${attestationId}`);
+                const data = await response.json();
+                
+                loadingDiv.classList.remove('active');
+                
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                if (!data.exists) {
+                    showError('Attestation not found on blockchain');
+                    return;
+                }
+                
+                showSuccess(data, attestationId);
+                
+            } catch (error) {
+                loadingDiv.classList.remove('active');
+                showError('Failed to verify: ' + error.message);
+            }
+        }
+        
+        function showSuccess(data, attestationId) {
+            const resultDiv = document.getElementById('result');
+            const att = data.attestation;
+            
+            const date = new Date(att.timestamp * 1000).toLocaleString();
+            
+            let html = `
+                <h2>✅ Verified Authentic Image</h2>
+                <p style="margin-bottom: 20px;">This image has been cryptographically verified on the Polygon blockchain.</p>
+                
+                <div class="proof-item">
+                    <strong>Attestation ID:</strong>
+                    <span>${attestationId}</span>
+                </div>
+                
+                <div class="proof-item">
+                    <strong>Merkle Root:</strong>
+                    <span>${att.merkleRoot}</span>
+                </div>
+                
+                <div class="proof-item">
+                    <strong>Image Hash:</strong>
+                    <span>${att.imageHash}</span>
+                </div>
+                
+                <div class="proof-item">
+                    <strong>Timestamp:</strong>
+                    <span>${date}</span>
+                </div>
+                
+                <div class="proof-item">
+                    <strong>Batch ID:</strong>
+                    <span>#${att.batchId}</span>
+                </div>
+                
+                <div class="proof-item">
+                    <strong>Device:</strong>
+                    <span>${att.devicePublicKey}</span>
+                </div>
+                
+                <div class="anti-ai-proof">
+                    <h3>🤖 Anti-AI Proof</h3>
+                    <p style="margin-bottom: 15px; color: #856404;">
+                        This image is proven to be from a real camera, not AI-generated.
+                    </p>
+                    <div class="check-item valid">Real camera hardware signature detected</div>
+                    <div class="check-item valid">Cryptographic proof verified on blockchain</div>
+                    <div class="check-item valid">Timestamp proves capture time</div>
+                    <div class="check-item valid">Cannot be forged or AI-generated</div>
+                </div>
+            `;
+            
+            if (data.isRevealed && data.imageURI) {
+                html += `
+                    <div class="proof-item">
+                        <strong>Image:</strong>
+                        <span><a href="${data.imageURI}" target="_blank">View Image</a></span>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="proof-item">
+                        <strong>Privacy:</strong>
+                        <span>🔒 Image not publicly revealed (owner's choice)</span>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="blockchain-link">
+                    <p style="margin-bottom: 10px; color: #666;">View on Blockchain Explorer</p>
+                    <a href="https://polygonscan.com/tx/${attestationId}" target="_blank">
+                        View on PolygonScan →
+                    </a>
+                </div>
+            `;
+            
+            resultDiv.innerHTML = html;
+            resultDiv.className = 'result success';
+        }
+        
+        function showError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <h2>❌ Verification Failed</h2>
+                <p>${message}</p>
+            `;
+            resultDiv.className = 'result error';
+        }
+    </script>
+</body>
+</html>
+

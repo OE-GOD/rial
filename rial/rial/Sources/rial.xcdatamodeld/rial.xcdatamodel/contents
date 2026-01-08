@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model version="1.0" documentVersion="1.0" lastSavedToolsVersion="22638" userDefinedModelVersionIdentifier="">
+    <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
+        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+</model>

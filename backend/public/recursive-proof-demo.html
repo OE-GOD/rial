@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZK-IMG Recursive Proof Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+        
+        .upload-section {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px dashed #444;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section:hover {
+            border-color: #667eea;
+            background: #1f1f1f;
+        }
+        
+        .upload-area {
+            text-align: center;
+            padding: 3rem;
+            cursor: pointer;
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        #imageInput {
+            display: none;
+        }
+        
+        .transformation-chain {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .transformation-step {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 1.5rem;
+            min-width: 250px;
+            border: 2px solid #333;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .transformation-step.active {
+            border-color: #667eea;
+            background: #2a2a3e;
+            transform: scale(1.05);
+        }
+        
+        .transformation-step.completed {
+            border-color: #48bb78;
+        }
+        
+        .step-number {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .step-number.completed {
+            background: #48bb78;
+        }
+        
+        .transform-type {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #667eea;
+        }
+        
+        .transform-params {
+            color: #999;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .proof-info {
+            background: #2a2a2a;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        
+        .proof-info.verified {
+            background: rgba(72, 187, 120, 0.1);
+            color: #48bb78;
+        }
+        
+        .image-preview {
+            margin: 1rem 0;
+            text-align: center;
+        }
+        
+        .image-preview img {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .add-transform {
+            background: #48bb78;
+        }
+        
+        .add-transform:hover {
+            background: #38a169;
+        }
+        
+        .verify-chain {
+            background: #ed8936;
+        }
+        
+        .verify-chain:hover {
+            background: #dd6b20;
+        }
+        
+        .export-chain {
+            background: #4299e1;
+        }
+        
+        .export-chain:hover {
+            background: #3182ce;
+        }
+        
+        .proof-visualization {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .proof-tree {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            padding: 2rem;
+        }
+        
+        .proof-node {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 120px;
+            position: relative;
+        }
+        
+        .proof-node::after {
+            content: '→';
+            position: absolute;
+            right: -1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+        
+        .proof-node:last-child::after {
+            display: none;
+        }
+        
+        .status-message {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: rgba(72, 187, 120, 0.2);
+            border: 1px solid #48bb78;
+            color: #48bb78;
+        }
+        
+        .status-message.error {
+            background: rgba(245, 101, 101, 0.2);
+            border: 1px solid #f56565;
+            color: #f56565;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: #1a1a1a;
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal h3 {
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #999;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .stat-card {
+            background: #2a2a2a;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #999;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🔐 ZK-IMG Recursive Proof System</h1>
+        <p class="subtitle">Chain unlimited transformations with cryptographic proofs</p>
+    </header>
+
+    <div class="container">
+        <div class="upload-section">
+            <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+                <div class="upload-icon">📸</div>
+                <h3>Upload an image to start</h3>
+                <p>Click here or drag and drop</p>
+            </div>
+            <input type="file" id="imageInput" accept="image/*">
+        </div>
+
+        <div class="controls">
+            <button class="add-transform" onclick="showTransformModal()">
+                <span>➕</span> Add Transformation
+            </button>
+            <button class="process-chain" onclick="processChain()" disabled>
+                <span>⚡</span> Process Chain
+            </button>
+            <button class="verify-chain" onclick="verifyChain()" disabled>
+                <span>🔍</span> Verify Chain
+            </button>
+            <button class="export-chain" onclick="exportChain()" disabled>
+                <span>📦</span> Export Chain
+            </button>
+            <button onclick="resetDemo()">
+                <span>🔄</span> Reset
+            </button>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="transformation-chain" id="transformationChain"></div>
+
+        <div class="proof-visualization" id="proofVisualization" style="display: none;">
+            <h3>Proof Chain Visualization</h3>
+            <div class="proof-tree" id="proofTree"></div>
+            <div class="stats" id="stats"></div>
+        </div>
+    </div>
+
+    <!-- Transform Modal -->
+    <div class="modal" id="transformModal">
+        <div class="modal-content">
+            <h3>Add Transformation</h3>
+            <div class="form-group">
+                <label>Transformation Type</label>
+                <select id="transformType" onchange="updateTransformParams()">
+                    <option value="Crop">Crop</option>
+                    <option value="Resize">Resize</option>
+                    <option value="Grayscale">Grayscale</option>
+                    <option value="Brightness">Brightness</option>
+                    <option value="Contrast">Contrast</option>
+                    <option value="Blur">Blur</option>
+                    <option value="Sharpen">Sharpen</option>
+                    <option value="Rotate">Rotate</option>
+                </select>
+            </div>
+            <div id="transformParams"></div>
+            <div class="form-actions">
+                <button onclick="addTransformation()">Add</button>
+                <button onclick="closeModal()" style="background: #666;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedImage = null;
+        let transformationChain = [];
+        let proofChain = null;
+        let currentChainId = null;
+
+        // Image upload handler
+        document.getElementById('imageInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedImage = file;
+                showStatus('Image uploaded successfully', 'success');
+                enableControls();
+                displayImagePreview(file);
+            }
+        });
+
+        function displayImagePreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                // Add preview to first step
+                if (transformationChain.length === 0) {
+                    addTransformationStep({
+                        type: 'Original',
+                        parameters: {},
+                        preview: e.target.result
+                    });
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showTransformModal() {
+            document.getElementById('transformModal').style.display = 'flex';
+            updateTransformParams();
+        }
+
+        function closeModal() {
+            document.getElementById('transformModal').style.display = 'none';
+        }
+
+        function updateTransformParams() {
+            const type = document.getElementById('transformType').value;
+            const paramsDiv = document.getElementById('transformParams');
+            
+            const paramConfigs = {
+                'Crop': `
+                    <div class="form-group">
+                        <label>X Position</label>
+                        <input type="number" id="param_x" value="50" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Y Position</label>
+                        <input type="number" id="param_y" value="50" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Width</label>
+                        <input type="number" id="param_width" value="400" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Height</label>
+                        <input type="number" id="param_height" value="400" min="1">
+                    </div>
+                `,
+                'Resize': `
+                    <div class="form-group">
+                        <label>Width</label>
+                        <input type="number" id="param_width" value="300" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Height</label>
+                        <input type="number" id="param_height" value="300" min="1">
+                    </div>
+                `,
+                'Brightness': `
+                    <div class="form-group">
+                        <label>Adjustment (0.5 - 2.0)</label>
+                        <input type="number" id="param_adjustment" value="1.2" min="0.5" max="2" step="0.1">
+                    </div>
+                `,
+                'Contrast': `
+                    <div class="form-group">
+                        <label>Factor (0.5 - 2.0)</label>
+                        <input type="number" id="param_factor" value="1.5" min="0.5" max="2" step="0.1">
+                    </div>
+                `,
+                'Blur': `
+                    <div class="form-group">
+                        <label>Radius (1 - 10)</label>
+                        <input type="number" id="param_radius" value="2" min="1" max="10">
+                    </div>
+                `,
+                'Sharpen': `
+                    <div class="form-group">
+                        <label>Sigma (0.5 - 5)</label>
+                        <input type="number" id="param_sigma" value="1" min="0.5" max="5" step="0.1">
+                    </div>
+                `,
+                'Rotate': `
+                    <div class="form-group">
+                        <label>Angle (degrees)</label>
+                        <input type="number" id="param_angle" value="90" min="-360" max="360">
+                    </div>
+                `,
+                'Grayscale': ''
+            };
+            
+            paramsDiv.innerHTML = paramConfigs[type] || '';
+        }
+
+        function addTransformation() {
+            const type = document.getElementById('transformType').value;
+            const params = {};
+            
+            // Collect parameters
+            document.querySelectorAll('[id^="param_"]').forEach(input => {
+                const paramName = input.id.replace('param_', '');
+                params[paramName] = parseFloat(input.value) || input.value;
+            });
+            
+            addTransformationStep({
+                type,
+                parameters: params
+            });
+            
+            closeModal();
+        }
+
+        function addTransformationStep(transformation) {
+            transformationChain.push(transformation);
+            renderTransformationChain();
+            enableControls();
+        }
+
+        function renderTransformationChain() {
+            const chainDiv = document.getElementById('transformationChain');
+            chainDiv.innerHTML = '';
+            
+            transformationChain.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'transformation-step';
+                stepDiv.innerHTML = `
+                    <div class="step-number">Step ${index + 1}</div>
+                    <div class="transform-type">${step.type}</div>
+                    <div class="transform-params">
+                        ${Object.entries(step.parameters)
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(', ') || 'No parameters'}
+                    </div>
+                    ${step.preview ? `
+                        <div class="image-preview">
+                            <img src="${step.preview}" alt="Step ${index + 1}">
+                        </div>
+                    ` : ''}
+                    ${step.proof ? `
+                        <div class="proof-info verified">
+                            ✅ Proof verified<br>
+                            Depth: ${step.proof.depth}
+                        </div>
+                    ` : ''}
+                `;
+                chainDiv.appendChild(stepDiv);
+            });
+        }
+
+        async function processChain() {
+            if (!uploadedImage || transformationChain.length < 2) {
+                showStatus('Please upload an image and add transformations', 'error');
+                return;
+            }
+            
+            showStatus('Processing transformation chain...', 'info');
+            disableControls();
+            
+            try {
+                let currentProofId = null;
+                
+                // Skip the "Original" step and process actual transformations
+                for (let i = 1; i < transformationChain.length; i++) {
+                    const step = transformationChain[i];
+                    
+                    // Highlight current step
+                    document.querySelectorAll('.transformation-step')[i].classList.add('active');
+                    
+                    const formData = new FormData();
+                    formData.append('image', uploadedImage);
+                    formData.append('transformation', JSON.stringify({
+                        type: step.type,
+                        parameters: step.parameters
+                    }));
+                    
+                    if (currentProofId) {
+                        formData.append('previousProofId', currentProofId);
+                    }
+                    
+                    const response = await fetch('/prove/recursive', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed at step ${i}: ${await response.text()}`);
+                    }
+                    
+                    const result = await response.json();
+                    currentProofId = result.proofId;
+                    currentChainId = result.chainId;
+                    
+                    // Update step with proof info
+                    transformationChain[i].proof = result;
+                    
+                    // Mark as completed
+                    document.querySelectorAll('.transformation-step')[i].classList.remove('active');
+                    document.querySelectorAll('.transformation-step')[i].classList.add('completed');
+                    document.querySelectorAll('.step-number')[i].classList.add('completed');
+                }
+                
+                renderTransformationChain();
+                showStatus('Chain processed successfully!', 'success');
+                visualizeProofChain();
+                enableVerification();
+                
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                enableControls();
+            }
+        }
+
+        async function verifyChain() {
+            if (!currentChainId) {
+                showStatus('No chain to verify', 'error');
+                return;
+            }
+            
+            showStatus('Verifying proof chain...', 'info');
+            
+            try {
+                const lastProof = transformationChain[transformationChain.length - 1].proof;
+                const response = await fetch('/verify/recursive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ proofId: lastProof.proofId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.valid) {
+                    showStatus('✅ Proof chain verified successfully!', 'success');
+                } else {
+                    showStatus('❌ Proof chain verification failed', 'error');
+                }
+                
+                updateStats(result);
+                
+            } catch (error) {
+                showStatus(`Verification error: ${error.message}`, 'error');
+            }
+        }
+
+        async function exportChain() {
+            if (!currentChainId) {
+                showStatus('No chain to export', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/proof/chain/${currentChainId}`);
+                const proofPackage = await response.json();
+                
+                // Download as JSON
+                const blob = new Blob([JSON.stringify(proofPackage, null, 2)], 
+                    { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `proof-chain-${currentChainId}.json`;
+                a.click();
+                
+                showStatus('Proof chain exported successfully', 'success');
+                
+            } catch (error) {
+                showStatus(`Export error: ${error.message}`, 'error');
+            }
+        }
+
+        function visualizeProofChain() {
+            const vizDiv = document.getElementById('proofVisualization');
+            vizDiv.style.display = 'block';
+            
+            const treeDiv = document.getElementById('proofTree');
+            treeDiv.innerHTML = '';
+            
+            // Create proof nodes
+            transformationChain.slice(1).forEach((step, index) => {
+                const node = document.createElement('div');
+                node.className = 'proof-node';
+                node.innerHTML = `
+                    <strong>${step.type}</strong><br>
+                    <small>Depth: ${step.proof?.depth || index + 1}</small>
+                `;
+                treeDiv.appendChild(node);
+            });
+        }
+
+        function updateStats(verificationResult) {
+            const statsDiv = document.getElementById('stats');
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${verificationResult.depth}</div>
+                    <div class="stat-label">Chain Depth</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${verificationResult.transformations.length}</div>
+                    <div class="stat-label">Transformations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${verificationResult.valid ? '✅' : '❌'}</div>
+                    <div class="stat-label">Verification Status</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${currentChainId.substr(-8)}</div>
+                    <div class="stat-label">Chain ID</div>
+                </div>
+            `;
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.style.display = 'block';
+            
+            if (type !== 'info') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function enableControls() {
+            document.querySelector('.process-chain').disabled = transformationChain.length < 2;
+        }
+
+        function disableControls() {
+            document.querySelectorAll('button').forEach(btn => {
+                if (!btn.textContent.includes('Reset')) {
+                    btn.disabled = true;
+                }
+            });
+        }
+
+        function enableVerification() {
+            document.querySelector('.verify-chain').disabled = false;
+            document.querySelector('.export-chain').disabled = false;
+            enableControls();
+        }
+
+        function resetDemo() {
+            uploadedImage = null;
+            transformationChain = [];
+            proofChain = null;
+            currentChainId = null;
+            
+            document.getElementById('imageInput').value = '';
+            document.getElementById('transformationChain').innerHTML = '';
+            document.getElementById('proofVisualization').style.display = 'none';
+            document.getElementById('statusMessage').style.display = 'none';
+            
+            document.querySelectorAll('button').forEach(btn => {
+                btn.disabled = btn.classList.contains('process-chain') || 
+                              btn.classList.contains('verify-chain') ||
+                              btn.classList.contains('export-chain');
+            });
+        }
+
+        // Initialize
+        updateTransformParams();
+    </script>
+</body>
+</html>

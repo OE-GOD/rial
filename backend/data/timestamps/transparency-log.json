@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "serverPublicKey": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEfIaK9JGCa173Z2Md9Z7BU4Cz45Jc\nQARWvNkf8tJEt0NM1/1fhUjyQnqxlgMtXEoCuASggcN7NGF1rpbjCOe8vA==\n-----END PUBLIC KEY-----\n",
+  "entries": [
+    {
+      "imageHash": "48e6e18939d4412f85dd3a9728b33c80e34fedb1cc08573ed71e5cc04b60b898",
+      "merkleRoot": "efacfc25f707adf484fe3a525f166ed39d64a8f9bbd612915ff98e0fa4e4a1d4",
+      "metadataHash": "efacfc25f707adf484fe3a525f166ed39d64a8f9bbd612915ff98e0fa4e4a1d4",
+      "timestamp": 1767044376134,
+      "isoTimestamp": "2025-12-29T21:39:36.134Z",
+      "devicePublicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE27MqG90YTLRB6Xry2BbUS2yiPYSuajnedyZFtNTFYtATyzIQyBXAYCw0QYiQRJTbzHBLbJF/RBzTYI0K9soqug==",
+      "signatureType": "webauthn",
+      "flags": {
+        "liveness": false,
+        "aiVerified": true
+      },
+      "logIndex": 0,
+      "signature": "MEYCIQCVGbFccON5SksJA2vcvF97r9dGv5D1LC6QoRHwrKPANQIhAMGLsES93yQE8G8f1fzig4Ce4uxzUY24oL3Ij+JUCPC9",
+      "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "entryHash": "e4184489b9161ad3b1463e3eea5d2495f11e1c980eb74dee731bb8ae88230cc2"
+    },
+    {
+      "imageHash": "9ee8716e29a218dfe755fdd58fc1f8e8a8f84523489ae3f380c9e2267a61bc90",
+      "merkleRoot": "37b5de471408208bc1dfb3fb8154bce1326f74f2fca051837fc53914b13b48a3",
+      "metadataHash": "37b5de471408208bc1dfb3fb8154bce1326f74f2fca051837fc53914b13b48a3",
+      "timestamp": 1767063803515,
+      "isoTimestamp": "2025-12-30T03:03:23.515Z",
+      "devicePublicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE27MqG90YTLRB6Xry2BbUS2yiPYSuajnedyZFtNTFYtATyzIQyBXAYCw0QYiQRJTbzHBLbJF/RBzTYI0K9soqug==",
+      "signatureType": "webauthn",
+      "flags": {
+        "liveness": false,
+        "aiVerified": false
+      },
+      "logIndex": 1,
+      "signature": "MEUCIQCBxD2GiY40CelOatOrLgiic/vuc0EDOzUHfadRJX24MAIgeiLEaaoj1KS4iBRmoQdVCqXFLqHuTkGpv7wwY9g4xlQ=",
+      "previousHash": "e4184489b9161ad3b1463e3eea5d2495f11e1c980eb74dee731bb8ae88230cc2",
+      "entryHash": "0f8de3505203e474840cba5e4775eac39e31510a198680adb7fdfa6f66103557"
+    }
+  ],
+  "lastUpdated": "2025-12-30T03:03:23.533Z"
+}

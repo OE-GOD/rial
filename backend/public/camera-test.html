@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Camera Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .status {
+            padding: 20px;
+            text-align: center;
+            background: #111;
+        }
+        .status.error { background: #500; }
+        .status.success { background: #050; }
+        .video-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            position: relative;
+        }
+        video {
+            width: 100%;
+            max-height: 70vh;
+            object-fit: cover;
+            background: #222;
+        }
+        .controls {
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            background: #111;
+        }
+        button {
+            padding: 20px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .start-btn { background: #0a84ff; color: #fff; }
+        .capture-btn { background: #fff; color: #000; }
+        .preview-container {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            flex-direction: column;
+        }
+        .preview-container.active { display: flex; }
+        .preview-container img {
+            flex: 1;
+            object-fit: contain;
+            max-height: 80vh;
+        }
+        .preview-actions {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .preview-actions button {
+            padding: 15px 30px;
+        }
+        #log {
+            padding: 10px;
+            font-size: 12px;
+            background: #222;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="status" id="status">Tap "Start Camera" to begin</div>
+
+    <div class="video-container">
+        <video id="video" autoplay playsinline muted></video>
+    </div>
+
+    <div class="controls">
+        <button class="start-btn" id="startBtn">Start Camera</button>
+        <button class="capture-btn" id="captureBtn" style="display:none;">Capture</button>
+    </div>
+
+    <div id="log"></div>
+
+    <div class="preview-container" id="preview">
+        <img id="previewImg" alt="Preview">
+        <div class="preview-actions">
+            <button onclick="closePreview()">Retake</button>
+            <button style="background:#0a84ff;color:#fff;" onclick="savePhoto()">Use Photo</button>
+        </div>
+    </div>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const status = document.getElementById('status');
+        const startBtn = document.getElementById('startBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const preview = document.getElementById('preview');
+        const previewImg = document.getElementById('previewImg');
+        const logEl = document.getElementById('log');
+
+        let stream = null;
+        let capturedBlob = null;
+
+        function log(msg) {
+            console.log(msg);
+            logEl.innerHTML = `${new Date().toLocaleTimeString()}: ${msg}<br>` + logEl.innerHTML;
+        }
+
+        function setStatus(msg, type = '') {
+            status.textContent = msg;
+            status.className = 'status ' + type;
+        }
+
+        // Check environment
+        log('Protocol: ' + location.protocol);
+        log('Host: ' + location.host);
+        log('getUserMedia: ' + !!navigator.mediaDevices?.getUserMedia);
+
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+            setStatus('ERROR: HTTPS required for camera!', 'error');
+            log('Need HTTPS for camera access');
+        }
+
+        startBtn.addEventListener('click', async () => {
+            log('Start button clicked');
+            setStatus('Requesting camera...', '');
+
+            try {
+                // Stop any existing stream
+                if (stream) {
+                    stream.getTracks().forEach(t => t.stop());
+                }
+
+                log('Calling getUserMedia...');
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+
+                log('Got stream with ' + stream.getVideoTracks().length + ' video tracks');
+
+                video.srcObject = stream;
+                video.muted = true;
+                video.setAttribute('playsinline', 'true');
+
+                log('Waiting for video to load...');
+
+                video.onloadedmetadata = () => {
+                    log('Video metadata loaded: ' + video.videoWidth + 'x' + video.videoHeight);
+                    video.play().then(() => {
+                        log('Video playing!');
+                        setStatus('Camera ready! Tap Capture.', 'success');
+                        startBtn.style.display = 'none';
+                        captureBtn.style.display = 'block';
+                    }).catch(e => {
+                        log('Play error: ' + e.message);
+                        setStatus('Play error: ' + e.message, 'error');
+                    });
+                };
+
+                video.onerror = (e) => {
+                    log('Video error: ' + e);
+                    setStatus('Video error', 'error');
+                };
+
+            } catch (err) {
+                log('Camera error: ' + err.name + ' - ' + err.message);
+                setStatus('Camera error: ' + err.message, 'error');
+
+                if (err.name === 'NotAllowedError') {
+                    setStatus('Camera blocked! Allow in Settings.', 'error');
+                } else if (err.name === 'NotFoundError') {
+                    setStatus('No camera found', 'error');
+                }
+            }
+        });
+
+        captureBtn.addEventListener('click', () => {
+            log('Capture clicked');
+
+            if (!video.videoWidth) {
+                log('Video not ready');
+                setStatus('Camera not ready', 'error');
+                return;
+            }
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            log('Captured ' + canvas.width + 'x' + canvas.height);
+
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    capturedBlob = blob;
+                    previewImg.src = URL.createObjectURL(blob);
+                    preview.classList.add('active');
+                    log('Preview ready, size: ' + blob.size);
+                    setStatus('Photo captured!', 'success');
+                } else {
+                    log('Failed to create blob');
+                    setStatus('Capture failed', 'error');
+                }
+            }, 'image/jpeg', 0.9);
+        });
+
+        function closePreview() {
+            preview.classList.remove('active');
+            log('Preview closed');
+        }
+
+        function savePhoto() {
+            if (capturedBlob) {
+                log('Photo saved! Size: ' + capturedBlob.size);
+                setStatus('Photo saved!', 'success');
+
+                // Store in localStorage for demo
+                const reader = new FileReader();
+                reader.onload = () => {
+                    localStorage.setItem('lastPhoto', reader.result);
+                    log('Saved to localStorage');
+                };
+                reader.readAsDataURL(capturedBlob);
+            }
+            closePreview();
+        }
+    </script>
+</body>
+</html>
