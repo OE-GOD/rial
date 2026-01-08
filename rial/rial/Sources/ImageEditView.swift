@@ -30,6 +30,7 @@ struct ImageEditView: View {
     @State private var showRetryOption = false
     @State private var showSettingsOption = false
     @State private var showConfetti = false
+    @State private var showPrivacyProofs = false
     
     // Size presets
     let sizePresets = [
@@ -217,7 +218,31 @@ struct ImageEditView: View {
                         .shadow(color: isLoading ? Color.clear : Color.blue.opacity(0.5), radius: 15, x: 0, y: 8)
                     }
                     .disabled(isLoading)
-                    
+
+                    // Privacy Proofs Button
+                    Button(action: {
+                        showPrivacyProofs = true
+                    }) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "lock.shield")
+                                .font(.system(size: 16))
+                            Text("Privacy Proofs")
+                                .font(.system(size: 15, weight: .medium))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.green.opacity(0.8), Color.teal.opacity(0.8)]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(12)
+                    }
+                    .disabled(isLoading)
+
                     // Cancel Button
                     Button(action: {
                         presentation.wrappedValue.dismiss()
@@ -236,6 +261,10 @@ struct ImageEditView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 30)
+            }
+            .sheet(isPresented: $showPrivacyProofs) {
+                PrivacyProofsView()
+                    .environmentObject(viewModel)
             }
             
             // Success confetti overlay
